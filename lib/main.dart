@@ -84,6 +84,16 @@ class _ScheduleTabState extends State<ScheduleTab> {
     print('スケジュール追加ボタンが押されました');
   }
 
+  void _editSchedule(int index) {
+    // TODO: スケジュール編集の処理を実装
+    print('スケジュール編集ボタンが押されました: $index');
+  }
+
+  void _deleteSchedule(int index) {
+    // TODO: スケジュール削除の処理を実装
+    print('スケジュール削除ボタンが押されました: $index');
+  }
+
   Widget _buildAddScheduleButton() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -119,6 +129,21 @@ class _ScheduleTabState extends State<ScheduleTab> {
             title: Text(
               '${event['time']}　${event['title']}',
               style: const TextStyle(fontSize: 16),
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  onPressed: () => _editSchedule(index),
+                  tooltip: '編集',
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _deleteSchedule(index),
+                  tooltip: '削除',
+                ),
+              ],
             ),
           ),
         );
