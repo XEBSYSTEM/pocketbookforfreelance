@@ -146,7 +146,16 @@ class _ScheduleFormState extends State<ScheduleForm> {
                 style: const TextStyle(color: Colors.black),
                 decoration: const InputDecoration(
                   labelText: 'タイトル *',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                  ),
+                  labelStyle: TextStyle(color: Colors.black),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -237,7 +246,16 @@ class _ScheduleFormState extends State<ScheduleForm> {
               DropdownButtonFormField<String>(
                 decoration: const InputDecoration(
                   labelText: '種別',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  labelStyle: TextStyle(color: Colors.black),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
                 ),
                 style: const TextStyle(color: Colors.black),
                 value: _meetingType,
@@ -267,7 +285,16 @@ class _ScheduleFormState extends State<ScheduleForm> {
                 style: const TextStyle(color: Colors.black),
                 decoration: const InputDecoration(
                   labelText: 'URL',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                  ),
+                  labelStyle: TextStyle(color: Colors.black),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -276,7 +303,16 @@ class _ScheduleFormState extends State<ScheduleForm> {
               DropdownButtonFormField<String>(
                 decoration: const InputDecoration(
                   labelText: 'エージェント',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  labelStyle: TextStyle(color: Colors.black),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
                 ),
                 style: const TextStyle(color: Colors.black),
                 value: _selectedAgent,
@@ -303,7 +339,16 @@ class _ScheduleFormState extends State<ScheduleForm> {
               DropdownButtonFormField<String>(
                 decoration: const InputDecoration(
                   labelText: 'エンド企業',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  labelStyle: TextStyle(color: Colors.black),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
                 ),
                 style: const TextStyle(color: Colors.black),
                 value: _selectedEndCompany,
@@ -333,7 +378,16 @@ class _ScheduleFormState extends State<ScheduleForm> {
                 style: const TextStyle(color: Colors.black),
                 decoration: const InputDecoration(
                   labelText: 'メモ',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                  ),
+                  labelStyle: TextStyle(color: Colors.black),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                  ),
                   alignLabelWithHint: true,
                 ),
                 maxLines: 5,
