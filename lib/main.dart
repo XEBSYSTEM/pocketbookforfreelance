@@ -79,6 +79,25 @@ class _ScheduleTabState extends State<ScheduleTab> {
     return _events[DateTime(day.year, day.month, day.day)] ?? [];
   }
 
+  void _addSchedule() {
+    // TODO: スケジュール追加の処理を実装
+    print('スケジュール追加ボタンが押されました');
+  }
+
+  Widget _buildAddScheduleButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: ElevatedButton.icon(
+        onPressed: _addSchedule,
+        icon: const Icon(Icons.add),
+        label: const Text('スケジュールを追加する'),
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -113,21 +132,45 @@ class _ScheduleTabState extends State<ScheduleTab> {
           child: Container(
             padding: const EdgeInsets.all(16),
             child: _selectedDay == null
-                ? const Center(child: Text('日付を選択してください'))
-                : ListView.builder(
-                    itemCount: _getEventsForDay(_selectedDay!).length,
-                    itemBuilder: (context, index) {
-                      final event = _getEventsForDay(_selectedDay!)[index];
-                      return Card(
-                        child: ListTile(
-                          title: Text(
-                            '${event['time']}　${event['title']}',
-                            style: const TextStyle(fontSize: 16),
+                ? Column(
+                    children: [
+                      _buildAddScheduleButton(),
+                      const Expanded(
+                        child: Center(child: Text('日付を選択してください')),
+                      ),
+                    ],
+                  )
+                : _getEventsForDay(_selectedDay!).isEmpty
+                    ? Column(
+                        children: [
+                          _buildAddScheduleButton(),
+                          const Expanded(
+                            child: Center(child: Text('予定はありません')),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          Expanded(
+                            child: ListView.builder(
+                              itemCount: _getEventsForDay(_selectedDay!).length,
+                              itemBuilder: (context, index) {
+                                final event =
+                                    _getEventsForDay(_selectedDay!)[index];
+                                return Card(
+                                  child: ListTile(
+                                    title: Text(
+                                      '${event['time']}　${event['title']}',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          _buildAddScheduleButton(),
+                        ],
+                      ),
           ),
         ),
       ],
