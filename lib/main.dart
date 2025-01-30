@@ -160,9 +160,45 @@ class _ScheduleTabState extends State<ScheduleTab> {
     }
   }
 
-  void _deleteSchedule(int index) {
-    // TODO: スケジュール削除の処理を実装
-    print('スケジュール削除ボタンが押されました: $index');
+  Future<void> _deleteSchedule(int index) async {
+    if (_selectedDay == null) return;
+
+    final events = _getEventsForDay(_selectedDay!);
+    if (index >= events.length) return;
+
+    final event = events[index];
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('スケジュールの削除'),
+        content: Text('「${event['title']}」を削除してもよろしいですか？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('削除'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      setState(() {
+        final key = DateTime(
+            _selectedDay!.year, _selectedDay!.month, _selectedDay!.day);
+        final dayEvents = _events[key];
+        if (dayEvents != null) {
+          dayEvents.removeAt(index);
+          if (dayEvents.isEmpty) {
+            _events.remove(key);
+          }
+        }
+      });
+    }
   }
 
   Widget _buildAddScheduleButton() {
