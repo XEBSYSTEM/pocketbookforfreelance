@@ -35,7 +35,7 @@ class MyHomePage extends StatelessWidget {
           bottom: const TabBar(
             tabs: [
               Tab(icon: Icon(Icons.calendar_today), text: 'スケジュール'),
-              Tab(icon: Icon(Icons.business), text: '仕事'),
+              Tab(icon: Icon(Icons.business), text: '企業一覧'),
               Tab(icon: Icon(Icons.school), text: '学習'),
             ],
           ),
