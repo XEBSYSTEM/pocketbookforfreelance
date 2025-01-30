@@ -1,0 +1,27 @@
+name: pocketbookforfreelance
+description: "フリーランス用手帳アプリ"
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  table_calendar: ^3.0.9
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/スクリーンショット 2024-04-14 101431.png
+    - assets/janken_gu.png
+    - assets/janken_choki.png
+    - assets/janken_pa.png
