@@ -65,18 +65,58 @@ class _ScheduleTabState extends State<ScheduleTab> {
   DateTime? _selectedDay;
 
   // サンプルの予定データ
-  final Map<DateTime, List<Map<String, String>>> _events = {
+  final Map<DateTime, List<Map<String, dynamic>>> _events = {
     DateTime(2025, 1, 30): [
-      {'time': '09:00', 'title': '朝のミーティング'},
-      {'time': '13:00', 'title': 'ランチミーティング'},
+      {
+        'time': '09:00',
+        'title': '朝のミーティング',
+        'isAllDay': false,
+        'startTime': const TimeOfDay(hour: 9, minute: 0),
+        'endTime': const TimeOfDay(hour: 10, minute: 0),
+        'meetingType': '対面',
+        'url': 'https://example.com',
+        'agent': 'エージェントA',
+        'endCompany': 'エンドA',
+      },
+      {
+        'time': '13:00',
+        'title': 'ランチミーティング',
+        'isAllDay': false,
+        'startTime': const TimeOfDay(hour: 13, minute: 0),
+        'endTime': const TimeOfDay(hour: 14, minute: 0),
+        'meetingType': 'リモート',
+        'url': 'https://meet.example.com',
+        'agent': 'エージェントB',
+        'endCompany': 'エンドB',
+      },
     ],
     DateTime(2025, 1, 31): [
-      {'time': '10:00', 'title': 'プロジェクト会議'},
-      {'time': '15:00', 'title': 'クライアントとの打ち合わせ'},
+      {
+        'time': '10:00',
+        'title': 'プロジェクト会議',
+        'isAllDay': false,
+        'startTime': const TimeOfDay(hour: 10, minute: 0),
+        'endTime': const TimeOfDay(hour: 11, minute: 0),
+        'meetingType': '対面',
+        'url': '',
+        'agent': 'エージェントA',
+        'endCompany': 'エンドA',
+      },
+      {
+        'time': '15:00',
+        'title': 'クライアントとの打ち合わせ',
+        'isAllDay': false,
+        'startTime': const TimeOfDay(hour: 15, minute: 0),
+        'endTime': const TimeOfDay(hour: 16, minute: 0),
+        'meetingType': 'リモート',
+        'url': 'https://client.example.com',
+        'agent': 'エージェントB',
+        'endCompany': 'エンドB',
+      },
     ],
   };
 
-  List<Map<String, String>> _getEventsForDay(DateTime day) {
+  List<Map<String, dynamic>> _getEventsForDay(DateTime day) {
     return _events[DateTime(day.year, day.month, day.day)] ?? [];
   }
 
@@ -96,9 +136,28 @@ class _ScheduleTabState extends State<ScheduleTab> {
     }
   }
 
-  void _editSchedule(int index) {
-    // TODO: スケジュール編集の処理を実装
-    print('スケジュール編集ボタンが押されました: $index');
+  void _editSchedule(int index) async {
+    if (_selectedDay == null) return;
+
+    final events = _getEventsForDay(_selectedDay!);
+    if (index >= events.length) return;
+
+    final event = events[index];
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ScheduleForm(
+          initialDate: _selectedDay,
+          initialData: event,
+          isEditing: true,
+        ),
+      ),
+    );
+
+    if (result != null && mounted) {
+      // TODO: 返されたデータを使用してスケジュールを更新
+      print('更新されたスケジュール: $result');
+    }
   }
 
   void _deleteSchedule(int index) {
