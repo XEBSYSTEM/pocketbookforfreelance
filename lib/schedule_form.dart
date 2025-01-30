@@ -147,14 +147,14 @@ class _ScheduleFormState extends State<ScheduleForm> {
                 decoration: const InputDecoration(
                   labelText: 'タイトル *',
                   border: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                    borderSide: BorderSide(color: Colors.black, width: 2.0),
                   ),
                   labelStyle: TextStyle(color: Colors.black),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                    borderSide: BorderSide(color: Colors.black, width: 2.0),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                    borderSide: BorderSide(color: Colors.black, width: 2.0),
                   ),
                 ),
                 validator: (value) {
@@ -286,14 +286,14 @@ class _ScheduleFormState extends State<ScheduleForm> {
                 decoration: const InputDecoration(
                   labelText: 'URL',
                   border: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                    borderSide: BorderSide(color: Colors.black, width: 2.0),
                   ),
                   labelStyle: TextStyle(color: Colors.black),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                    borderSide: BorderSide(color: Colors.black, width: 2.0),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                    borderSide: BorderSide(color: Colors.black, width: 2.0),
                   ),
                 ),
               ),
@@ -379,14 +379,14 @@ class _ScheduleFormState extends State<ScheduleForm> {
                 decoration: const InputDecoration(
                   labelText: 'メモ',
                   border: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                    borderSide: BorderSide(color: Colors.black, width: 2.0),
                   ),
                   labelStyle: TextStyle(color: Colors.black),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                    borderSide: BorderSide(color: Colors.black, width: 2.0),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
+                    borderSide: BorderSide(color: Colors.black, width: 2.0),
                   ),
                   alignLabelWithHint: true,
                 ),
