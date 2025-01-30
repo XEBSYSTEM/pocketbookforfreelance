@@ -91,6 +91,14 @@ class CompanyListTab extends StatelessWidget {
                   );
                 },
               ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: ElevatedButton.icon(
+                  onPressed: null, // TODO: エージェント追加画面への遷移
+                  icon: const Icon(Icons.add),
+                  label: const Text('エージェントを追加'),
+                ),
+              ),
             ],
           ),
         ),
@@ -127,6 +135,14 @@ class CompanyListTab extends StatelessWidget {
                   );
                 },
               ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: ElevatedButton.icon(
+                  onPressed: null, // TODO: エンド企業追加画面への遷移
+                  icon: const Icon(Icons.add),
+                  label: const Text('エンド企業を追加'),
+                ),
+              ),
             ],
           ),
         ),
@@ -162,6 +178,14 @@ class CompanyListTab extends StatelessWidget {
                     },
                   );
                 },
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: ElevatedButton.icon(
+                  onPressed: null, // TODO: 中間請け企業追加画面への遷移
+                  icon: const Icon(Icons.add),
+                  label: const Text('中間請け企業を追加'),
+                ),
               ),
             ],
           ),
