@@ -43,11 +43,130 @@ class MyHomePage extends StatelessWidget {
         body: TabBarView(
           children: [
             ScheduleTab(),
-            const Center(child: Text('仕事画面')),
+            CompanyListTab(),
             const Center(child: Text('学習画面')),
           ],
         ),
       ),
+    );
+  }
+}
+
+class CompanyListTab extends StatelessWidget {
+  const CompanyListTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // エージェントリスト
+        Card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'エージェント',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 3, // サンプルデータ
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    leading: const Icon(Icons.business_center),
+                    title: Text('エージェント${index + 1}'),
+                    subtitle: Text('担当者: 山田太郎${index + 1}'),
+                    trailing: const Icon(Icons.arrow_forward_ios),
+                    onTap: () {
+                      // TODO: エージェント詳細画面へ遷移
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // エンド企業リスト
+        Card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'エンド企業',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 3, // サンプルデータ
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    leading: const Icon(Icons.apartment),
+                    title: Text('エンド企業${index + 1}'),
+                    subtitle: Text('業種: IT・通信${index + 1}'),
+                    trailing: const Icon(Icons.arrow_forward_ios),
+                    onTap: () {
+                      // TODO: エンド企業詳細画面へ遷移
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // 中間請け企業リスト
+        Card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  '中間請け企業',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 3, // サンプルデータ
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    leading: const Icon(Icons.business),
+                    title: Text('中間請け企業${index + 1}'),
+                    subtitle: Text('所在地: 東京都${index + 1}'),
+                    trailing: const Icon(Icons.arrow_forward_ios),
+                    onTap: () {
+                      // TODO: 中間請け企業詳細画面へ遷移
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
