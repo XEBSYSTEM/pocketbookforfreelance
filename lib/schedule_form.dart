@@ -2,8 +2,15 @@ import 'package:flutter/material.dart';
 
 class ScheduleForm extends StatefulWidget {
   final DateTime? initialDate;
+  final Map<String, dynamic>? initialData;
+  final bool isEditing;
 
-  const ScheduleForm({super.key, this.initialDate});
+  const ScheduleForm({
+    super.key,
+    this.initialDate,
+    this.initialData,
+    this.isEditing = false,
+  });
 
   @override
   State<ScheduleForm> createState() => _ScheduleFormState();
@@ -12,12 +19,13 @@ class ScheduleForm extends StatefulWidget {
 class _ScheduleFormState extends State<ScheduleForm> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
+  final _urlController = TextEditingController();
+  final _memoController = TextEditingController();
   DateTime? _selectedDate;
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
   bool _isAllDay = false;
   String? _meetingType;
-  final _urlController = TextEditingController();
   String? _selectedAgent;
   String? _selectedEndCompany;
 
@@ -30,12 +38,25 @@ class _ScheduleFormState extends State<ScheduleForm> {
   void initState() {
     super.initState();
     _selectedDate = widget.initialDate;
+
+    if (widget.initialData != null) {
+      _titleController.text = widget.initialData!['title'] ?? '';
+      _isAllDay = widget.initialData!['isAllDay'] ?? false;
+      _startTime = widget.initialData!['startTime'];
+      _endTime = widget.initialData!['endTime'];
+      _meetingType = widget.initialData!['meetingType'];
+      _urlController.text = widget.initialData!['url'] ?? '';
+      _selectedAgent = widget.initialData!['agent'];
+      _selectedEndCompany = widget.initialData!['endCompany'];
+      _memoController.text = widget.initialData!['memo'] ?? '';
+    }
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _urlController.dispose();
+    _memoController.dispose();
     super.dispose();
   }
 
@@ -84,7 +105,6 @@ class _ScheduleFormState extends State<ScheduleForm> {
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      // TODO: フォームデータの保存処理
       Navigator.pop(context, {
         'title': _titleController.text,
         'date': _selectedDate,
@@ -95,6 +115,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
         'url': _urlController.text,
         'agent': _selectedAgent,
         'endCompany': _selectedEndCompany,
+        'memo': _memoController.text,
       });
     }
   }
@@ -103,7 +124,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('スケジュール登録'),
+        title: Text(widget.isEditing ? 'スケジュール編集' : 'スケジュール登録'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -272,9 +293,22 @@ class _ScheduleFormState extends State<ScheduleForm> {
                   });
                 },
               ),
+              const SizedBox(height: 16),
+
+              // メモ
+              TextFormField(
+                controller: _memoController,
+                decoration: const InputDecoration(
+                  labelText: 'メモ',
+                  border: OutlineInputBorder(),
+                  alignLabelWithHint: true,
+                ),
+                maxLines: 5,
+                minLines: 3,
+              ),
               const SizedBox(height: 24),
 
-              // 登録ボタン
+              // 登録/更新ボタン
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -289,7 +323,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text('登録'),
+                  child: Text(widget.isEditing ? '更新' : '登録'),
                 ),
               ),
             ],

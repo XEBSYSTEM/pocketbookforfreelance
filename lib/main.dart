@@ -77,6 +77,7 @@ class _ScheduleTabState extends State<ScheduleTab> {
         'url': 'https://example.com',
         'agent': 'エージェントA',
         'endCompany': 'エンドA',
+        'memo': '重要な案件について議論する予定',
       },
       {
         'time': '13:00',
@@ -88,6 +89,7 @@ class _ScheduleTabState extends State<ScheduleTab> {
         'url': 'https://meet.example.com',
         'agent': 'エージェントB',
         'endCompany': 'エンドB',
+        'memo': 'ランチを取りながらの打ち合わせ',
       },
     ],
     DateTime(2025, 1, 31): [
@@ -101,6 +103,7 @@ class _ScheduleTabState extends State<ScheduleTab> {
         'url': '',
         'agent': 'エージェントA',
         'endCompany': 'エンドA',
+        'memo': '進捗報告と今後のスケジュール確認',
       },
       {
         'time': '15:00',
@@ -112,6 +115,7 @@ class _ScheduleTabState extends State<ScheduleTab> {
         'url': 'https://client.example.com',
         'agent': 'エージェントB',
         'endCompany': 'エンドB',
+        'memo': '要件定義の最終確認',
       },
     ],
   };
