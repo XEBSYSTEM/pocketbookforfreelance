@@ -83,7 +83,11 @@ class _ScheduleTabState extends State<ScheduleTab> {
   void _addSchedule() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const ScheduleForm()),
+      MaterialPageRoute(
+        builder: (context) => ScheduleForm(
+          initialDate: _selectedDay ?? _focusedDay,
+        ),
+      ),
     );
 
     if (result != null && mounted) {

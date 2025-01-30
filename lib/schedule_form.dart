@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class ScheduleForm extends StatefulWidget {
-  const ScheduleForm({super.key});
+  final DateTime? initialDate;
+
+  const ScheduleForm({super.key, this.initialDate});
 
   @override
   State<ScheduleForm> createState() => _ScheduleFormState();
@@ -23,6 +25,12 @@ class _ScheduleFormState extends State<ScheduleForm> {
   final List<String> _agents = ['', 'エージェントA', 'エージェントB'];
   final List<String> _endCompanies = ['', 'エンドA', 'エンドB'];
   final List<String> _meetingTypes = ['', '対面', 'リモート'];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = widget.initialDate;
+  }
 
   @override
   void dispose() {
