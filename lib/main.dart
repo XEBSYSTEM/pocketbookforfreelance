@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'schedule_form.dart';
 
 void main() {
   runApp(const MyApp());
@@ -79,9 +80,16 @@ class _ScheduleTabState extends State<ScheduleTab> {
     return _events[DateTime(day.year, day.month, day.day)] ?? [];
   }
 
-  void _addSchedule() {
-    // TODO: スケジュール追加の処理を実装
-    print('スケジュール追加ボタンが押されました');
+  void _addSchedule() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ScheduleForm()),
+    );
+
+    if (result != null && mounted) {
+      // TODO: 返されたデータを使用してスケジュールを追加
+      print('新しいスケジュール: $result');
+    }
   }
 
   void _editSchedule(int index) {
