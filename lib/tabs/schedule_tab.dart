@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../schedule_form.dart';
+import '../schedule_detail.dart';
 
 class ScheduleTab extends StatefulWidget {
   const ScheduleTab({super.key});
@@ -85,8 +86,14 @@ class _ScheduleTabState extends State<ScheduleTab> {
     );
 
     if (result != null && mounted) {
-      // TODO: 返されたデータを使用してスケジュールを追加
-      print('新しいスケジュール: $result');
+      setState(() {
+        final date = _selectedDay ?? _focusedDay;
+        final key = DateTime(date.year, date.month, date.day);
+        if (!_events.containsKey(key)) {
+          _events[key] = [];
+        }
+        _events[key]!.add(result as Map<String, dynamic>);
+      });
     }
   }
 
@@ -109,8 +116,11 @@ class _ScheduleTabState extends State<ScheduleTab> {
     );
 
     if (result != null && mounted) {
-      // TODO: 返されたデータを使用してスケジュールを更新
-      print('更新されたスケジュール: $result');
+      setState(() {
+        final key = DateTime(
+            _selectedDay!.year, _selectedDay!.month, _selectedDay!.day);
+        _events[key]![index] = result as Map<String, dynamic>;
+      });
     }
   }
 
@@ -188,6 +198,19 @@ class _ScheduleTabState extends State<ScheduleTab> {
               '${event['time']}　${event['title']}',
               style: const TextStyle(fontSize: 16),
             ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ScheduleDetail(
+                    scheduleData: {
+                      ...event,
+                      'date': _selectedDay,
+                    },
+                  ),
+                ),
+              );
+            },
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

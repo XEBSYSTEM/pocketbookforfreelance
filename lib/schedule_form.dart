@@ -4,14 +4,12 @@ class ScheduleForm extends StatefulWidget {
   final DateTime? initialDate;
   final Map<String, dynamic>? initialData;
   final bool isEditing;
-  final bool isViewing;
 
   const ScheduleForm({
     super.key,
     this.initialDate,
     this.initialData,
     this.isEditing = false,
-    this.isViewing = false,
   });
 
   @override
@@ -126,11 +124,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.isViewing
-              ? 'スケジュール詳細'
-              : (widget.isEditing ? 'スケジュール編集' : 'スケジュール登録'),
-        ),
+        title: Text(widget.isEditing ? 'スケジュール編集' : 'スケジュール登録'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -142,19 +136,18 @@ class _ScheduleFormState extends State<ScheduleForm> {
               // タイトル
               TextFormField(
                 controller: _titleController,
-                enabled: !widget.isViewing,
                 style: const TextStyle(color: Colors.black),
                 decoration: const InputDecoration(
                   labelText: 'タイトル *',
                   border: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 2.0),
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
                   ),
                   labelStyle: TextStyle(color: Colors.black),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 2.0),
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 2.0),
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
                   ),
                 ),
                 validator: (value) {
@@ -173,7 +166,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
                     : '日付: ${_selectedDate!.year}/${_selectedDate!.month}/${_selectedDate!.day}'),
                 trailing: const Icon(Icons.calendar_today),
                 tileColor: Colors.grey[200],
-                onTap: widget.isViewing ? null : _selectDate,
+                onTap: _selectDate,
               ),
               if (_selectedDate == null)
                 const Padding(
@@ -189,7 +182,6 @@ class _ScheduleFormState extends State<ScheduleForm> {
               CheckboxListTile(
                 title: const Text('終日'),
                 value: _isAllDay,
-                enabled: !widget.isViewing,
                 onChanged: (bool? value) {
                   setState(() {
                     _isAllDay = value ?? false;
@@ -213,8 +205,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
                             : '開始: ${_formatTimeOfDay(_startTime)}'),
                         trailing: const Icon(Icons.access_time),
                         tileColor: Colors.grey[200],
-                        onTap:
-                            widget.isViewing ? null : () => _selectTime(true),
+                        onTap: () => _selectTime(true),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -225,8 +216,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
                             : '終了: ${_formatTimeOfDay(_endTime)}'),
                         trailing: const Icon(Icons.access_time),
                         tileColor: Colors.grey[200],
-                        onTap:
-                            widget.isViewing ? null : () => _selectTime(false),
+                        onTap: () => _selectTime(false),
                       ),
                     ),
                   ],
@@ -268,32 +258,29 @@ class _ScheduleFormState extends State<ScheduleForm> {
                           ),
                         ))
                     .toList(),
-                onChanged: widget.isViewing
-                    ? null
-                    : (String? value) {
-                        setState(() {
-                          _meetingType = value;
-                        });
-                      },
+                onChanged: (String? value) {
+                  setState(() {
+                    _meetingType = value;
+                  });
+                },
               ),
               const SizedBox(height: 16),
 
               // URL
               TextFormField(
                 controller: _urlController,
-                enabled: !widget.isViewing,
                 style: const TextStyle(color: Colors.black),
                 decoration: const InputDecoration(
                   labelText: 'URL',
                   border: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 2.0),
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
                   ),
                   labelStyle: TextStyle(color: Colors.black),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 2.0),
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 2.0),
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
                   ),
                 ),
               ),
@@ -325,13 +312,11 @@ class _ScheduleFormState extends State<ScheduleForm> {
                           ),
                         ))
                     .toList(),
-                onChanged: widget.isViewing
-                    ? null
-                    : (String? value) {
-                        setState(() {
-                          _selectedAgent = value;
-                        });
-                      },
+                onChanged: (String? value) {
+                  setState(() {
+                    _selectedAgent = value;
+                  });
+                },
               ),
               const SizedBox(height: 16),
 
@@ -361,32 +346,29 @@ class _ScheduleFormState extends State<ScheduleForm> {
                           ),
                         ))
                     .toList(),
-                onChanged: widget.isViewing
-                    ? null
-                    : (String? value) {
-                        setState(() {
-                          _selectedEndCompany = value;
-                        });
-                      },
+                onChanged: (String? value) {
+                  setState(() {
+                    _selectedEndCompany = value;
+                  });
+                },
               ),
               const SizedBox(height: 16),
 
               // メモ
               TextFormField(
                 controller: _memoController,
-                enabled: !widget.isViewing,
                 style: const TextStyle(color: Colors.black),
                 decoration: const InputDecoration(
                   labelText: 'メモ',
                   border: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 2.0),
+                    borderSide: BorderSide(color: Colors.red, width: 1.0),
                   ),
                   labelStyle: TextStyle(color: Colors.black),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 2.0),
+                    borderSide: BorderSide(color: Colors.red, width: 1.0),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 2.0),
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
                   ),
                   alignLabelWithHint: true,
                 ),
@@ -395,25 +377,24 @@ class _ScheduleFormState extends State<ScheduleForm> {
               ),
               const SizedBox(height: 24),
 
-              // 登録/更新ボタン（閲覧モードでは非表示）
-              if (!widget.isViewing)
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate() &&
-                          _selectedDate != null &&
-                          (_isAllDay ||
-                              (_startTime != null && _endTime != null))) {
-                        _submitForm();
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: Text(widget.isEditing ? '更新' : '登録'),
+              // 登録/更新ボタン
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate() &&
+                        _selectedDate != null &&
+                        (_isAllDay ||
+                            (_startTime != null && _endTime != null))) {
+                      _submitForm();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
+                  child: Text(widget.isEditing ? '更新' : '登録'),
                 ),
+              ),
             ],
           ),
         ),
