@@ -86,7 +86,7 @@ class _ScheduleTabState extends State<ScheduleTab> {
 
   Widget _buildAddScheduleButton() {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
       child: ElevatedButton.icon(
         onPressed: _addSchedule,
         icon: const Icon(Icons.add),
@@ -95,6 +95,34 @@ class _ScheduleTabState extends State<ScheduleTab> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         ),
       ),
+    );
+  }
+
+  Widget _buildEventsList() {
+    if (_selectedDay == null) {
+      return const Center(child: Text('日付を選択してください'));
+    }
+
+    final events = _getEventsForDay(_selectedDay!);
+    if (events.isEmpty) {
+      return const Center(child: Text('予定はありません'));
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      itemCount: events.length,
+      itemBuilder: (context, index) {
+        final event = events[index];
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          child: ListTile(
+            title: Text(
+              '${event['time']}　${event['title']}',
+              style: const TextStyle(fontSize: 16),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -130,47 +158,19 @@ class _ScheduleTabState extends State<ScheduleTab> {
         const SizedBox(height: 20),
         Expanded(
           child: Container(
-            padding: const EdgeInsets.all(16),
-            child: _selectedDay == null
-                ? Column(
-                    children: [
-                      _buildAddScheduleButton(),
-                      const Expanded(
-                        child: Center(child: Text('日付を選択してください')),
-                      ),
-                    ],
-                  )
-                : _getEventsForDay(_selectedDay!).isEmpty
-                    ? Column(
-                        children: [
-                          _buildAddScheduleButton(),
-                          const Expanded(
-                            child: Center(child: Text('予定はありません')),
-                          ),
-                        ],
-                      )
-                    : Column(
-                        children: [
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: _getEventsForDay(_selectedDay!).length,
-                              itemBuilder: (context, index) {
-                                final event =
-                                    _getEventsForDay(_selectedDay!)[index];
-                                return Card(
-                                  child: ListTile(
-                                    title: Text(
-                                      '${event['time']}　${event['title']}',
-                                      style: const TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          _buildAddScheduleButton(),
-                        ],
-                      ),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                Expanded(
+                  child: _buildEventsList(),
+                ),
+                _buildAddScheduleButton(),
+              ],
+            ),
           ),
         ),
       ],
