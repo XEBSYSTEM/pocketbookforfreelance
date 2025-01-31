@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'tabs/company_list_tab.dart';
 import 'tabs/schedule_tab.dart';
 import 'db/database_helper.dart';
 
 void main() async {
+  // Flutter初期化
   WidgetsFlutterBinding.ensureInitialized();
+
+  // WindowsでSQLiteを使用するための初期化
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
 
   // データベースの初期化とパスの確認
   final dbHelper = DatabaseHelper.instance;
