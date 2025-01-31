@@ -117,7 +117,7 @@ class DatabaseHelper {
 
   // 読み取り（企業種別指定）
   Future<List<Map<String, dynamic>>> readCompaniesByType(
-      int companyType) async {
+      String companyType) async {
     final db = await instance.database;
     return await db.query(
       'companies',
