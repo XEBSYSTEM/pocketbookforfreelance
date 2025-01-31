@@ -185,14 +185,8 @@ class _AgentEditState extends State<AgentEdit> {
                     };
                     // データベースを更新
                     _updateAgent(updatedAgentData).then((_) {
-                      // エージェント詳細画面に戻る
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              AgentDetail(agentData: widget.agentData),
-                        ),
-                      );
+                      // 前の画面に戻る
+                      Navigator.pop(context);
                     });
                   }
                 },
