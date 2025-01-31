@@ -168,7 +168,9 @@ class _AgentDetailState extends State<AgentDetail> {
                                   );
 
                                   if (updatedData != null) {
-                                    Navigator.pop(context, updatedData);
+                                    setState(() {
+                                      _agentData = updatedData;
+                                    });
                                   }
                                 },
                                 icon: const Icon(Icons.edit),
