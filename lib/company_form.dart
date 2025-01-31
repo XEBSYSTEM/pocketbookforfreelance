@@ -159,32 +159,52 @@ class _CompanyFormState extends State<CompanyForm> {
                     // 企業種別を文字列に変換
                     String companyTypeStr = widget.companyType.name;
 
-                    // フォームの値をMapにまとめる
+                    // フォームの値をデータベースカラム名に合わせてMapにまとめる
                     final companyData = {
                       'companyType': companyTypeStr,
-                      'companyName': _companyName,
-                      'branchAddress': _branchAddress,
-                      'branchPhone': _branchPhone,
-                      'headOfficeAddress': _headOfficeAddress,
-                      'headOfficePhone': _headOfficePhone,
-                      'personInCharge': _personInCharge,
-                      'personPhone': _personPhone,
-                      'personEmail': _personEmail,
+                      'company_name': _companyName,
+                      'branch_address': _branchAddress,
+                      'branch_phone': _branchPhone,
+                      'head_office_address': _headOfficeAddress,
+                      'head_office_phone': _headOfficePhone,
+                      'person_in_charge': _personInCharge,
+                      'person_phone': _personPhone,
+                      'person_email': _personEmail,
                     };
 
                     // データベースに保存
                     try {
+                      print('企業データを登録します: $companyData'); // デバッグログ
+
+                      // 企業種別マスタデータの存在確認
+                      final companyTypes =
+                          await DatabaseHelper.instance.readAllCompanyTypes();
+                      if (companyTypes.isEmpty) {
+                        print('企業種別マスタデータが存在しないため、初期データを投入します'); // デバッグログ
+                        await DatabaseHelper.instance.insertSampleData();
+                      }
+
                       final id = await DatabaseHelper.instance
                           .createCompany(companyData);
-                      if (context.mounted) {
-                        Navigator.pop(context, companyData);
-                      }
-                    } catch (e) {
+                      print('企業データを登録しました。ID: $id'); // デバッグログ
+
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                                '${_getCompanyTypeName(widget.companyType)}の登録に失敗しました'),
+                                '${_getCompanyTypeName(widget.companyType)}を登録しました'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        Navigator.pop(context, companyData);
+                      }
+                    } catch (e) {
+                      print('企業データの登録に失敗しました: $e'); // デバッグログ
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                                '${_getCompanyTypeName(widget.companyType)}の登録に失敗しました: ${e.toString()}'),
                             backgroundColor: Colors.red,
                           ),
                         );

@@ -94,34 +94,43 @@ class DatabaseHelper {
   // 企業のCRUD操作
   // 作成
   Future<int> createCompany(Map<String, dynamic> company) async {
-    final db = await instance.database;
-    // company_typeをstring型からint型に変換
-    final String companyTypeStr = company['companyType'];
-    int companyTypeId;
-    switch (companyTypeStr) {
-      case 'agent':
-        companyTypeId = 1;
-      case 'end':
-        companyTypeId = 2;
-      case 'intermediary':
-        companyTypeId = 3;
-      default:
-        throw Exception('Invalid company type: $companyTypeStr');
-    }
+    try {
+      final db = await instance.database;
+      print('Creating company with data: $company'); // デバッグログ
 
-    final data = {
-      'company_type': companyTypeId,
-      'company_name': company['company_name'],
-      'branch_address': company['branch_address'],
-      'branch_phone': company['branch_phone'],
-      'head_office_address': company['head_office_address'],
-      'head_office_phone': company['head_office_phone'],
-      'person_in_charge': company['person_in_charge'],
-      'person_phone': company['person_phone'],
-      'person_email': company['person_email'],
-      'updated_at': DateTime.now().toIso8601String(),
-    };
-    return await db.insert('companies', data);
+      // company_typeをstring型からint型に変換
+      final String companyTypeStr = company['companyType'];
+      int companyTypeId;
+      switch (companyTypeStr) {
+        case 'agent':
+          companyTypeId = 1;
+        case 'end':
+          companyTypeId = 2;
+        case 'intermediary':
+          companyTypeId = 3;
+        default:
+          throw Exception('Invalid company type: $companyTypeStr');
+      }
+
+      final data = {
+        'company_type': companyTypeId,
+        'company_name': company['companyName'],
+        'branch_address': company['branchAddress'],
+        'branch_phone': company['branchPhone'],
+        'head_office_address': company['headOfficeAddress'],
+        'head_office_phone': company['headOfficePhone'],
+        'person_in_charge': company['personInCharge'],
+        'person_phone': company['personPhone'],
+        'person_email': company['personEmail'],
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      print('Transformed data for insert: $data'); // デバッグログ
+      return await db.insert('companies', data);
+    } catch (e) {
+      print('Error creating company: $e'); // エラーログ
+      throw Exception('企業の登録に失敗しました: $e');
+    }
   }
 
   // 読み取り（全企業）
