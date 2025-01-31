@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'company_detail.dart';
 import 'db/database_helper.dart';
 
 class CompanyForm extends StatefulWidget {
   final String title;
-  final int companyType;
+  final CompanyType companyType;
 
   const CompanyForm({
     super.key,
@@ -155,9 +156,12 @@ class _CompanyFormState extends State<CompanyForm> {
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
+                    // 企業種別を文字列に変換
+                    String companyTypeStr = widget.companyType.name;
+
                     // フォームの値をMapにまとめる
                     final companyData = {
-                      'companyType': widget.companyType,
+                      'companyType': companyTypeStr,
                       'companyName': _companyName,
                       'branchAddress': _branchAddress,
                       'branchPhone': _branchPhone,
@@ -201,16 +205,14 @@ class _CompanyFormState extends State<CompanyForm> {
     );
   }
 
-  String _getCompanyTypeName(int type) {
+  String _getCompanyTypeName(CompanyType type) {
     switch (type) {
-      case 1:
+      case CompanyType.agent:
         return 'エージェント';
-      case 2:
+      case CompanyType.end:
         return 'エンド企業';
-      case 3:
+      case CompanyType.intermediary:
         return '中間請け企業';
-      default:
-        return '企業';
     }
   }
 }

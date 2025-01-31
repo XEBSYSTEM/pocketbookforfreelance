@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import '../company_detail.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -54,7 +55,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE companies (
         id INTEGER PRIMARY KEY,
-        company_type TEXT NOT NULL,
+        company_type INTEGER NOT NULL,
         company_name TEXT NOT NULL,
         branch_address TEXT,
         branch_phone TEXT,
@@ -65,7 +66,7 @@ class DatabaseHelper {
         person_email TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (company_type) REFERENCES company_types (id)
+        FOREIGN KEY (company_type) REFERENCES company_types(id)
       )
     ''');
 
@@ -94,16 +95,30 @@ class DatabaseHelper {
   // 作成
   Future<int> createCompany(Map<String, dynamic> company) async {
     final db = await instance.database;
+    // company_typeをstring型からint型に変換
+    final String companyTypeStr = company['companyType'];
+    int companyTypeId;
+    switch (companyTypeStr) {
+      case 'agent':
+        companyTypeId = 1;
+      case 'end':
+        companyTypeId = 2;
+      case 'intermediary':
+        companyTypeId = 3;
+      default:
+        throw Exception('Invalid company type: $companyTypeStr');
+    }
+
     final data = {
-      'company_type': company['companyType'],
-      'company_name': company['companyName'],
-      'branch_address': company['branchAddress'],
-      'branch_phone': company['branchPhone'],
-      'head_office_address': company['headOfficeAddress'],
-      'head_office_phone': company['headOfficePhone'],
-      'person_in_charge': company['personInCharge'],
-      'person_phone': company['personPhone'],
-      'person_email': company['personEmail'],
+      'company_type': companyTypeId,
+      'company_name': company['company_name'],
+      'branch_address': company['branch_address'],
+      'branch_phone': company['branch_phone'],
+      'head_office_address': company['head_office_address'],
+      'head_office_phone': company['head_office_phone'],
+      'person_in_charge': company['person_in_charge'],
+      'person_phone': company['person_phone'],
+      'person_email': company['person_email'],
       'updated_at': DateTime.now().toIso8601String(),
     };
     return await db.insert('companies', data);
@@ -115,14 +130,26 @@ class DatabaseHelper {
     return await db.query('companies', orderBy: 'created_at DESC');
   }
 
+  // CompanyTypeをint型に変換するヘルパーメソッド
+  static int getCompanyTypeId(CompanyType type) {
+    switch (type) {
+      case CompanyType.agent:
+        return 1;
+      case CompanyType.end:
+        return 2;
+      case CompanyType.intermediary:
+        return 3;
+    }
+  }
+
   // 読み取り（企業種別指定）
   Future<List<Map<String, dynamic>>> readCompaniesByType(
-      String companyType) async {
+      CompanyType companyType) async {
     final db = await instance.database;
     return await db.query(
       'companies',
       where: 'company_type = ?',
-      whereArgs: [companyType],
+      whereArgs: [getCompanyTypeId(companyType)],
       orderBy: 'created_at DESC',
     );
   }
@@ -145,8 +172,22 @@ class DatabaseHelper {
   // 更新
   Future<int> updateCompany(int id, Map<String, dynamic> company) async {
     final db = await instance.database;
+    // company_typeをstring型からint型に変換
+    final String companyTypeStr = company['companyType'];
+    int companyTypeId;
+    switch (companyTypeStr) {
+      case 'agent':
+        companyTypeId = 1;
+      case 'end':
+        companyTypeId = 2;
+      case 'intermediary':
+        companyTypeId = 3;
+      default:
+        throw Exception('Invalid company type: $companyTypeStr');
+    }
+
     final data = {
-      'company_type': company['companyType'],
+      'company_type': companyTypeId,
       'company_name': company['companyName'],
       'branch_address': company['branchAddress'],
       'branch_phone': company['branchPhone'],
@@ -208,7 +249,7 @@ class DatabaseHelper {
     final agentSamples = [
       {
         'id': 1,
-        'company_type': 'agent',
+        'company_type': 1, // エージェント
         'company_name': 'テックエージェント株式会社',
         'branch_address': '東京都渋谷区神宮前1-1-1',
         'branch_phone': '03-1234-5678',
@@ -220,7 +261,7 @@ class DatabaseHelper {
       },
       {
         'id': 2,
-        'company_type': 'agent',
+        'company_type': 1, // エージェント
         'company_name': 'キャリアパートナーズ株式会社',
         'branch_address': '東京都新宿区新宿2-2-2',
         'branch_phone': '03-2345-6789',
@@ -232,7 +273,7 @@ class DatabaseHelper {
       },
       {
         'id': 3,
-        'company_type': 'agent',
+        'company_type': 1, // エージェント
         'company_name': 'ITキャリア株式会社',
         'branch_address': '東京都品川区五反田3-3-3',
         'branch_phone': '03-3456-7890',
@@ -249,7 +290,7 @@ class DatabaseHelper {
         10,
         (index) => {
               'id': 4 + index,
-              'company_type': 'end',
+              'company_type': 2, // エンド企業
               'company_name': 'エンド企業${index + 1}',
               'branch_address': '東京都渋谷区...',
               'branch_phone': '03-xxxx-xxxx',
@@ -265,7 +306,7 @@ class DatabaseHelper {
         10,
         (index) => {
               'id': 14 + index,
-              'company_type': 'intermediary',
+              'company_type': 3, // 中間請け企業
               'company_name': '中間請け企業${index + 1}',
               'branch_address': '東京都渋谷区...',
               'branch_phone': '03-xxxx-xxxx',

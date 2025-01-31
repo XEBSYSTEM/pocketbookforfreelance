@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'db/database_helper.dart';
+import 'intermediary_company_detail.dart';
 
 class IntermediaryCompanyEdit extends StatefulWidget {
-  final Map<String, dynamic> intermediaryCompanyData;
+  final int companyId;
+  final Map<String, dynamic> initialData;
 
-  const IntermediaryCompanyEdit(
-      {super.key, required this.intermediaryCompanyData});
+  const IntermediaryCompanyEdit({
+    super.key,
+    required this.companyId,
+    required this.initialData,
+  });
 
   @override
   State<IntermediaryCompanyEdit> createState() =>
@@ -27,14 +33,14 @@ class _IntermediaryCompanyEditState extends State<IntermediaryCompanyEdit> {
   void initState() {
     super.initState();
     // 初期値の設定
-    _companyName = widget.intermediaryCompanyData['companyName'] ?? '';
-    _address = widget.intermediaryCompanyData['address'] ?? '';
-    _phone = widget.intermediaryCompanyData['phone'] ?? '';
-    _personInCharge = widget.intermediaryCompanyData['personInCharge'] ?? '';
-    _department = widget.intermediaryCompanyData['department'] ?? '';
-    _position = widget.intermediaryCompanyData['position'] ?? '';
-    _email = widget.intermediaryCompanyData['email'] ?? '';
-    _commission = widget.intermediaryCompanyData['commission'] ?? '';
+    _companyName = widget.initialData['company_name'] ?? '';
+    _address = widget.initialData['branch_address'] ?? '';
+    _phone = widget.initialData['branch_phone'] ?? '';
+    _personInCharge = widget.initialData['person_in_charge'] ?? '';
+    _department = widget.initialData['department'] ?? '';
+    _position = widget.initialData['position'] ?? '';
+    _email = widget.initialData['person_email'] ?? '';
+    _commission = widget.initialData['commission'] ?? '';
   }
 
   @override
@@ -173,18 +179,28 @@ class _IntermediaryCompanyEditState extends State<IntermediaryCompanyEdit> {
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
                     // フォームの値をMapにまとめる
-                    final updatedIntermediaryCompanyData = {
-                      'companyName': _companyName,
-                      'address': _address,
-                      'phone': _phone,
-                      'personInCharge': _personInCharge,
+                    final updatedData = {
+                      'company_name': _companyName,
+                      'branch_address': _address,
+                      'branch_phone': _phone,
+                      'person_in_charge': _personInCharge,
                       'department': _department,
                       'position': _position,
-                      'email': _email,
+                      'person_email': _email,
                       'commission': _commission,
                     };
-                    // 前の画面に更新されたデータを返す
-                    Navigator.pop(context, updatedIntermediaryCompanyData);
+                    // データベースを更新
+                    _updateCompany(updatedData).then((_) {
+                      // 中間請け企業詳細画面に戻る
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => IntermediaryCompanyDetail(
+                            companyId: widget.companyId,
+                          ),
+                        ),
+                      );
+                    });
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -200,5 +216,13 @@ class _IntermediaryCompanyEditState extends State<IntermediaryCompanyEdit> {
         ),
       ),
     );
+  }
+
+  Future<void> _updateCompany(Map<String, dynamic> data) async {
+    // company_typeを'intermediary'に設定
+    data['company_type'] = 'intermediary';
+
+    // データベースを更新
+    await DatabaseHelper.instance.updateCompany(widget.companyId, data);
   }
 }

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../company_form.dart';
-import '../agent_detail.dart';
-import '../end_company_detail.dart';
-import '../intermediary_company_detail.dart';
+import '../company_detail.dart';
 import '../db/database_helper.dart';
 
 class CompanyListTab extends StatefulWidget {
@@ -35,9 +33,10 @@ class _CompanyListTabState extends State<CompanyListTab> {
     setState(() => _isLoading = true);
 
     try {
-      _agentList = await _dbHelper.readCompaniesByType('agent');
-      _endCompanyList = await _dbHelper.readCompaniesByType('end');
-      _intermediaryList = await _dbHelper.readCompaniesByType('intermediary');
+      _agentList = await _dbHelper.readCompaniesByType(CompanyType.agent);
+      _endCompanyList = await _dbHelper.readCompaniesByType(CompanyType.end);
+      _intermediaryList =
+          await _dbHelper.readCompaniesByType(CompanyType.intermediary);
     } catch (e) {
       debugPrint('データ取得エラー: $e');
     }
@@ -86,8 +85,10 @@ class _CompanyListTabState extends State<CompanyListTab> {
                                     await Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                            AgentDetail(agentData: agent),
+                                        builder: (context) => CompanyDetail(
+                                          companyId: agent['id'],
+                                          companyType: CompanyType.agent,
+                                        ),
                                       ),
                                     );
                                     _loadCompanies(); // 画面に戻ってきたらデータを再取得
@@ -103,9 +104,9 @@ class _CompanyListTabState extends State<CompanyListTab> {
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const CompanyForm(
+                        builder: (context) => CompanyForm(
                           title: 'エージェント登録',
-                          companyType: 1,
+                          companyType: CompanyType.agent,
                         ),
                       ),
                     );
@@ -156,8 +157,9 @@ class _CompanyListTabState extends State<CompanyListTab> {
                                     await Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => EndCompanyDetail(
-                                          endCompanyData: company,
+                                        builder: (context) => CompanyDetail(
+                                          companyId: company['id'],
+                                          companyType: CompanyType.end,
                                         ),
                                       ),
                                     );
@@ -174,9 +176,9 @@ class _CompanyListTabState extends State<CompanyListTab> {
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const CompanyForm(
+                        builder: (context) => CompanyForm(
                           title: 'エンド企業登録',
-                          companyType: 2,
+                          companyType: CompanyType.end,
                         ),
                       ),
                     );
@@ -227,9 +229,9 @@ class _CompanyListTabState extends State<CompanyListTab> {
                                     await Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                            IntermediaryCompanyDetail(
-                                          intermediaryCompanyData: company,
+                                        builder: (context) => CompanyDetail(
+                                          companyId: company['id'],
+                                          companyType: CompanyType.intermediary,
                                         ),
                                       ),
                                     );
@@ -246,9 +248,9 @@ class _CompanyListTabState extends State<CompanyListTab> {
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const CompanyForm(
+                        builder: (context) => CompanyForm(
                           title: '中間請け企業登録',
-                          companyType: 3,
+                          companyType: CompanyType.intermediary,
                         ),
                       ),
                     );

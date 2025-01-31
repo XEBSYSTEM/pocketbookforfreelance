@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'db/database_helper.dart';
+import 'end_company_detail.dart';
 
 class EndCompanyEdit extends StatefulWidget {
-  final Map<String, dynamic> endCompanyData;
+  final int companyId;
+  final Map<String, dynamic> initialData;
 
-  const EndCompanyEdit({super.key, required this.endCompanyData});
+  const EndCompanyEdit({
+    super.key,
+    required this.companyId,
+    required this.initialData,
+  });
 
   @override
   State<EndCompanyEdit> createState() => _EndCompanyEditState();
@@ -24,13 +31,13 @@ class _EndCompanyEditState extends State<EndCompanyEdit> {
   void initState() {
     super.initState();
     // 初期値の設定
-    _companyName = widget.endCompanyData['companyName'] ?? '';
-    _address = widget.endCompanyData['address'] ?? '';
-    _phone = widget.endCompanyData['phone'] ?? '';
-    _personInCharge = widget.endCompanyData['personInCharge'] ?? '';
-    _department = widget.endCompanyData['department'] ?? '';
-    _position = widget.endCompanyData['position'] ?? '';
-    _email = widget.endCompanyData['email'] ?? '';
+    _companyName = widget.initialData['company_name'] ?? '';
+    _address = widget.initialData['branch_address'] ?? '';
+    _phone = widget.initialData['branch_phone'] ?? '';
+    _personInCharge = widget.initialData['person_in_charge'] ?? '';
+    _department = widget.initialData['department'] ?? '';
+    _position = widget.initialData['position'] ?? '';
+    _email = widget.initialData['person_email'] ?? '';
   }
 
   @override
@@ -155,17 +162,27 @@ class _EndCompanyEditState extends State<EndCompanyEdit> {
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
                     // フォームの値をMapにまとめる
-                    final updatedEndCompanyData = {
-                      'companyName': _companyName,
-                      'address': _address,
-                      'phone': _phone,
-                      'personInCharge': _personInCharge,
+                    final updatedData = {
+                      'company_name': _companyName,
+                      'branch_address': _address,
+                      'branch_phone': _phone,
+                      'person_in_charge': _personInCharge,
                       'department': _department,
                       'position': _position,
-                      'email': _email,
+                      'person_email': _email,
                     };
-                    // 前の画面に更新されたデータを返す
-                    Navigator.pop(context, updatedEndCompanyData);
+                    // データベースを更新
+                    _updateEndCompany(updatedData).then((_) {
+                      // エンド企業詳細画面に戻る
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EndCompanyDetail(
+                            companyId: widget.companyId,
+                          ),
+                        ),
+                      );
+                    });
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -181,5 +198,13 @@ class _EndCompanyEditState extends State<EndCompanyEdit> {
         ),
       ),
     );
+  }
+
+  Future<void> _updateEndCompany(Map<String, dynamic> data) async {
+    // company_typeを'end'に設定
+    data['company_type'] = 'end';
+
+    // データベースを更新
+    await DatabaseHelper.instance.updateCompany(widget.companyId, data);
   }
 }
