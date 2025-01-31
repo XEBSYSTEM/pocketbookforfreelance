@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import '../agent_form.dart';
+import '../company_form.dart';
 import '../agent_detail.dart';
-import '../end_company_form.dart';
 import '../end_company_detail.dart';
-import '../intermediary_company_form.dart';
 import '../intermediary_company_detail.dart';
 
 class CompanyListTab extends StatelessWidget {
@@ -94,7 +92,10 @@ class CompanyListTab extends StatelessWidget {
                     final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const AgentForm(),
+                        builder: (context) => const CompanyForm(
+                          title: 'エージェント登録',
+                          companyType: 1,
+                        ),
                       ),
                     );
                     if (result != null) {
@@ -167,7 +168,10 @@ class CompanyListTab extends StatelessWidget {
                     final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const EndCompanyForm(),
+                        builder: (context) => const CompanyForm(
+                          title: 'エンド企業登録',
+                          companyType: 2,
+                        ),
                       ),
                     );
                     if (result != null) {
@@ -241,7 +245,10 @@ class CompanyListTab extends StatelessWidget {
                     final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const IntermediaryCompanyForm(),
+                        builder: (context) => const CompanyForm(
+                          title: '中間請け企業登録',
+                          companyType: 3,
+                        ),
                       ),
                     );
                     if (result != null) {

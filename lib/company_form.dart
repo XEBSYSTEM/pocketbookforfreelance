@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'db/database_helper.dart';
 
-class IntermediaryCompanyForm extends StatefulWidget {
-  const IntermediaryCompanyForm({super.key});
+class CompanyForm extends StatefulWidget {
+  final String title;
+  final int companyType;
+
+  const CompanyForm({
+    super.key,
+    required this.title,
+    required this.companyType,
+  });
 
   @override
-  State<IntermediaryCompanyForm> createState() =>
-      _IntermediaryCompanyFormState();
+  State<CompanyForm> createState() => _CompanyFormState();
 }
 
-class _IntermediaryCompanyFormState extends State<IntermediaryCompanyForm> {
+class _CompanyFormState extends State<CompanyForm> {
   final _formKey = GlobalKey<FormState>();
 
   // フォームの入力値
@@ -26,7 +32,7 @@ class _IntermediaryCompanyFormState extends State<IntermediaryCompanyForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('中間請け企業登録'),
+        title: Text(widget.title),
       ),
       body: Form(
         key: _formKey,
@@ -150,8 +156,8 @@ class _IntermediaryCompanyFormState extends State<IntermediaryCompanyForm> {
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
                     // フォームの値をMapにまとめる
-                    final intermediaryCompanyData = {
-                      'companyType': 3, // 中間請け企業は3
+                    final companyData = {
+                      'companyType': widget.companyType,
                       'companyName': _companyName,
                       'branchAddress': _branchAddress,
                       'branchPhone': _branchPhone,
@@ -165,15 +171,16 @@ class _IntermediaryCompanyFormState extends State<IntermediaryCompanyForm> {
                     // データベースに保存
                     try {
                       final id = await DatabaseHelper.instance
-                          .createCompany(intermediaryCompanyData);
+                          .createCompany(companyData);
                       if (context.mounted) {
-                        Navigator.pop(context, intermediaryCompanyData);
+                        Navigator.pop(context, companyData);
                       }
                     } catch (e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('中間請け企業の登録に失敗しました'),
+                          SnackBar(
+                            content: Text(
+                                '${_getCompanyTypeName(widget.companyType)}の登録に失敗しました'),
                             backgroundColor: Colors.red,
                           ),
                         );
@@ -192,5 +199,18 @@ class _IntermediaryCompanyFormState extends State<IntermediaryCompanyForm> {
         ),
       ),
     );
+  }
+
+  String _getCompanyTypeName(int type) {
+    switch (type) {
+      case 1:
+        return 'エージェント';
+      case 2:
+        return 'エンド企業';
+      case 3:
+        return '中間請け企業';
+      default:
+        return '企業';
+    }
   }
 }
