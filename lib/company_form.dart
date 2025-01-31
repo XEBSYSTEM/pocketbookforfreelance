@@ -162,14 +162,14 @@ class _CompanyFormState extends State<CompanyForm> {
                     // フォームの値をデータベースカラム名に合わせてMapにまとめる
                     final companyData = {
                       'companyType': companyTypeStr,
-                      'company_name': _companyName,
-                      'branch_address': _branchAddress,
-                      'branch_phone': _branchPhone,
-                      'head_office_address': _headOfficeAddress,
-                      'head_office_phone': _headOfficePhone,
-                      'person_in_charge': _personInCharge,
-                      'person_phone': _personPhone,
-                      'person_email': _personEmail,
+                      'companyName': _companyName,
+                      'branchAddress': _branchAddress,
+                      'branchPhone': _branchPhone,
+                      'headOfficeAddress': _headOfficeAddress,
+                      'headOfficePhone': _headOfficePhone,
+                      'personInCharge': _personInCharge,
+                      'personPhone': _personPhone,
+                      'personEmail': _personEmail,
                     };
 
                     // データベースに保存

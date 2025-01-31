@@ -122,8 +122,11 @@ class DatabaseHelper {
         'person_in_charge': company['personInCharge'],
         'person_phone': company['personPhone'],
         'person_email': company['personEmail'],
+        'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
       };
+
+      print('Transformed data for database insert: $data'); // デバッグログ追加
 
       print('Transformed data for insert: $data'); // デバッグログ
       return await db.insert('companies', data);
