@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -15,9 +16,17 @@ class DatabaseHelper {
 
   Future<Database> _initDB(String filePath) async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
+    print('Database Directory: $dbPath'); // データベースディレクトリを出力
 
-    print('Database Path: $path'); // デバッグ用にパスを出力
+    final path = join(dbPath, filePath);
+    print('Full Database Path: $path'); // 完全なパスを出力
+
+    // ディレクトリが存在することを確認
+    final dir = Directory(dbPath);
+    if (!dir.existsSync()) {
+      print('Creating directory: $dbPath');
+      dir.createSync(recursive: true);
+    }
 
     return await openDatabase(
       path,
