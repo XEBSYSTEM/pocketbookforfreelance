@@ -19,17 +19,29 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
     );
   }
 
   Future<void> _createDB(Database db, int version) async {
+    // 企業種別マスタテーブル
+    await db.execute('''
+      CREATE TABLE company_types (
+        id INTEGER PRIMARY KEY,
+        type_name TEXT NOT NULL,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
+
     // 企業テーブル（エージェント、エンド企業、中間請け企業を統合）
     await db.execute('''
       CREATE TABLE companies (
         id INTEGER PRIMARY KEY,
-        company_type INTEGER NOT NULL CHECK (company_type IN (1, 2, 3)), -- 1:エージェント, 2:エンド企業, 3:中間請け企業
+        company_type INTEGER NOT NULL,
+        FOREIGN KEY (company_type) REFERENCES company_types (id),
         company_name TEXT NOT NULL,
         branch_address TEXT,
         branch_phone TEXT,
@@ -149,9 +161,34 @@ class DatabaseHelper {
     );
   }
 
+  // 企業種別マスタの取得
+  Future<List<Map<String, dynamic>>> readAllCompanyTypes() async {
+    final db = await instance.database;
+    return await db.query('company_types', orderBy: 'id ASC');
+  }
+
   // 初期データの投入
   Future<void> insertSampleData() async {
     final db = await instance.database;
+
+    // 企業種別マスタの初期データ
+    final companyTypes = [
+      {
+        'id': 1,
+        'type_name': 'エージェント',
+        'description': '人材紹介会社',
+      },
+      {
+        'id': 2,
+        'type_name': 'エンド企業',
+        'description': '最終契約企業',
+      },
+      {
+        'id': 3,
+        'type_name': '中間請け企業',
+        'description': '仲介企業',
+      },
+    ];
 
     // エージェントのサンプルデータ
     final agentSamples = [
@@ -229,6 +266,12 @@ class DatabaseHelper {
     await db.transaction((txn) async {
       // 既存のデータを削除
       await txn.delete('companies');
+      await txn.delete('company_types');
+
+      // 企業種別マスタの初期データを挿入
+      for (final type in companyTypes) {
+        await txn.insert('company_types', type);
+      }
 
       // サンプルデータの挿入
       for (final company in [
