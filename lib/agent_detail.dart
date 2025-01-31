@@ -155,24 +155,26 @@ class _AgentDetailState extends State<AgentDetail> {
                           children: [
                             Expanded(
                               child: ElevatedButton.icon(
-                                onPressed: () async {
-                                  final updatedData = await Navigator.push<
-                                      Map<String, dynamic>>(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => AgentEdit(
-                                        agentId: widget.agentId,
-                                        initialData: _agentData!,
-                                      ),
-                                    ),
-                                  );
+                                onPressed: _isLoading || _agentData == null
+                                    ? null
+                                    : () async {
+                                        final updatedData = await Navigator
+                                            .push<Map<String, dynamic>>(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => AgentEdit(
+                                              agentId: widget.agentId,
+                                              initialData: _agentData!,
+                                            ),
+                                          ),
+                                        );
 
-                                  if (updatedData != null) {
-                                    setState(() {
-                                      _agentData = updatedData;
-                                    });
-                                  }
-                                },
+                                        if (updatedData != null) {
+                                          setState(() {
+                                            _agentData = updatedData;
+                                          });
+                                        }
+                                      },
                                 icon: const Icon(Icons.edit),
                                 label: const Text('編集'),
                                 style: ElevatedButton.styleFrom(
