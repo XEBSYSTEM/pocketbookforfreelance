@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import '../agent_form.dart';
 import '../agent_detail.dart';
+import '../end_company_form.dart';
+import '../end_company_detail.dart';
+import '../intermediary_company_form.dart';
+import '../intermediary_company_detail.dart';
 
 class CompanyListTab extends StatelessWidget {
   CompanyListTab({super.key});
@@ -134,7 +138,23 @@ class CompanyListTab extends StatelessWidget {
                       subtitle: Text('業種: IT・通信${index + 1}'),
                       trailing: const Icon(Icons.arrow_forward_ios),
                       onTap: () {
-                        // TODO: エンド企業詳細画面へ遷移
+                        // TODO: 実際のデータを渡すように修正
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EndCompanyDetail(
+                              endCompanyData: {
+                                'companyName': 'エンド企業${index + 1}',
+                                'address': '東京都渋谷区...',
+                                'phone': '03-xxxx-xxxx',
+                                'personInCharge': '担当者名',
+                                'department': '人事部',
+                                'position': '部長',
+                                'email': 'test@example.com',
+                              },
+                            ),
+                          ),
+                        );
                       },
                     );
                   },
@@ -143,7 +163,18 @@ class CompanyListTab extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: ElevatedButton.icon(
-                  onPressed: null,
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EndCompanyForm(),
+                      ),
+                    );
+                    if (result != null) {
+                      // TODO: 登録されたエンド企業データを保存
+                      print('新しいエンド企業: $result');
+                    }
+                  },
                   icon: const Icon(Icons.add),
                   label: const Text('エンド企業を追加'),
                 ),
@@ -180,7 +211,24 @@ class CompanyListTab extends StatelessWidget {
                       subtitle: Text('所在地: 東京都${index + 1}'),
                       trailing: const Icon(Icons.arrow_forward_ios),
                       onTap: () {
-                        // TODO: 中間請け企業詳細画面へ遷移
+                        // TODO: 実際のデータを渡すように修正
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => IntermediaryCompanyDetail(
+                              intermediaryCompanyData: {
+                                'companyName': '中間請け企業${index + 1}',
+                                'address': '東京都渋谷区...',
+                                'phone': '03-xxxx-xxxx',
+                                'personInCharge': '担当者名',
+                                'department': '営業部',
+                                'position': '部長',
+                                'email': 'test@example.com',
+                                'commission': '10%',
+                              },
+                            ),
+                          ),
+                        );
                       },
                     );
                   },
@@ -189,7 +237,18 @@ class CompanyListTab extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: ElevatedButton.icon(
-                  onPressed: null,
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const IntermediaryCompanyForm(),
+                      ),
+                    );
+                    if (result != null) {
+                      // TODO: 登録された中間請け企業データを保存
+                      print('新しい中間請け企業: $result');
+                    }
+                  },
                   icon: const Icon(Icons.add),
                   label: const Text('中間請け企業を追加'),
                 ),
