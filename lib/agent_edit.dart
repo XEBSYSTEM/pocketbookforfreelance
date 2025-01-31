@@ -213,7 +213,7 @@ class _AgentEditState extends State<AgentEdit> {
 
   Future<void> _updateAgent(Map<String, dynamic> agentData) async {
     // company_typeを1（エージェント）に設定
-    agentData['companyType'] = 1;
+    agentData['companyType'] = 'agent';
 
     // データベースを更新
     await DatabaseHelper.instance.updateCompany(

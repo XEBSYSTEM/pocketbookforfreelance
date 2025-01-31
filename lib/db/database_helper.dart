@@ -33,7 +33,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _createDB,
     );
   }
@@ -54,7 +54,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE companies (
         id INTEGER PRIMARY KEY,
-        company_type INTEGER NOT NULL,
+        company_type TEXT NOT NULL,
         company_name TEXT NOT NULL,
         branch_address TEXT,
         branch_phone TEXT,
@@ -208,7 +208,7 @@ class DatabaseHelper {
     final agentSamples = [
       {
         'id': 1,
-        'company_type': 1,
+        'company_type': 'agent',
         'company_name': 'テックエージェント株式会社',
         'branch_address': '東京都渋谷区神宮前1-1-1',
         'branch_phone': '03-1234-5678',
@@ -220,7 +220,7 @@ class DatabaseHelper {
       },
       {
         'id': 2,
-        'company_type': 1,
+        'company_type': 'agent',
         'company_name': 'キャリアパートナーズ株式会社',
         'branch_address': '東京都新宿区新宿2-2-2',
         'branch_phone': '03-2345-6789',
@@ -232,7 +232,7 @@ class DatabaseHelper {
       },
       {
         'id': 3,
-        'company_type': 1,
+        'company_type': 'agent',
         'company_name': 'ITキャリア株式会社',
         'branch_address': '東京都品川区五反田3-3-3',
         'branch_phone': '03-3456-7890',
@@ -249,7 +249,7 @@ class DatabaseHelper {
         10,
         (index) => {
               'id': 4 + index,
-              'company_type': 2,
+              'company_type': 'end',
               'company_name': 'エンド企業${index + 1}',
               'branch_address': '東京都渋谷区...',
               'branch_phone': '03-xxxx-xxxx',
@@ -265,7 +265,7 @@ class DatabaseHelper {
         10,
         (index) => {
               'id': 14 + index,
-              'company_type': 3,
+              'company_type': 'intermediary',
               'company_name': '中間請け企業${index + 1}',
               'branch_address': '東京都渋谷区...',
               'branch_phone': '03-xxxx-xxxx',
