@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'db/database_helper.dart';
+import 'agent_detail.dart';
 
 class AgentEdit extends StatefulWidget {
   final Map<String, dynamic> agentData;
@@ -181,8 +183,17 @@ class _AgentEditState extends State<AgentEdit> {
                       'personPhone': _personPhone,
                       'personEmail': _personEmail,
                     };
-                    // 前の画面に更新されたデータを返す
-                    Navigator.pop(context, updatedAgentData);
+                    // データベースを更新
+                    _updateAgent(updatedAgentData).then((_) {
+                      // エージェント詳細画面に戻る
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              AgentDetail(agentData: widget.agentData),
+                        ),
+                      );
+                    });
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -197,6 +208,17 @@ class _AgentEditState extends State<AgentEdit> {
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _updateAgent(Map<String, dynamic> agentData) async {
+    // company_typeを1（エージェント）に設定
+    agentData['companyType'] = 1;
+
+    // データベースを更新
+    await DatabaseHelper.instance.updateCompany(
+      int.parse(widget.agentData['id'].toString()),
+      agentData,
     );
   }
 }
