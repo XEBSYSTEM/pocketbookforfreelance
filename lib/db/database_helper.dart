@@ -17,6 +17,8 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
+    print('Database Path: $path'); // デバッグ用にパスを出力
+
     return await openDatabase(
       path,
       version: 2,
