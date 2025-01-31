@@ -202,10 +202,36 @@ class _AgentDetailState extends State<AgentDetail> {
                                           child: const Text('キャンセル'),
                                         ),
                                         TextButton(
-                                          onPressed: () {
-                                            // TODO: 削除処理の実装
-                                            Navigator.of(context).pop();
-                                            Navigator.of(context).pop();
+                                          onPressed: () async {
+                                            try {
+                                              await _dbHelper.deleteCompany(
+                                                  widget.agentId);
+                                              if (!mounted) return;
+                                              Navigator.of(context)
+                                                  .pop(); // ダイアログを閉じる
+                                              Navigator.of(context)
+                                                  .pop(); // 詳細画面を閉じる
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                const SnackBar(
+                                                  content:
+                                                      Text('エージェントを削除しました'),
+                                                  backgroundColor: Colors.green,
+                                                ),
+                                              );
+                                            } catch (e) {
+                                              if (!mounted) return;
+                                              Navigator.of(context)
+                                                  .pop(); // ダイアログを閉じる
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content:
+                                                      Text('削除に失敗しました: $e'),
+                                                  backgroundColor: Colors.red,
+                                                ),
+                                              );
+                                            }
                                           },
                                           child: const Text(
                                             '削除',
