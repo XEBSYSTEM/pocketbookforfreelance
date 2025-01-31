@@ -217,7 +217,9 @@ class _AgentEditState extends State<AgentEdit> {
 
     // データベースを更新
     await DatabaseHelper.instance.updateCompany(
-      int.parse(widget.agentData['id'].toString()),
+      widget.agentData['id'] != null
+          ? int.parse(widget.agentData['id'].toString())
+          : 0,
       agentData,
     );
   }
