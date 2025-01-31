@@ -55,7 +55,6 @@ class DatabaseHelper {
       CREATE TABLE companies (
         id INTEGER PRIMARY KEY,
         company_type INTEGER NOT NULL,
-        FOREIGN KEY (company_type) REFERENCES company_types (id),
         company_name TEXT NOT NULL,
         branch_address TEXT,
         branch_phone TEXT,
@@ -65,7 +64,8 @@ class DatabaseHelper {
         person_phone TEXT,
         person_email TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (company_type) REFERENCES company_types (id)
       )
     ''');
 
