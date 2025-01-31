@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'agent_edit.dart';
 
 class AgentDetail extends StatelessWidget {
   final Map<String, dynamic> agentData;
@@ -120,8 +121,19 @@ class AgentDetail extends StatelessWidget {
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        // TODO: 編集画面への遷移処理
+                      onPressed: () async {
+                        final updatedData =
+                            await Navigator.push<Map<String, dynamic>>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                AgentEdit(agentData: agentData),
+                          ),
+                        );
+
+                        if (updatedData != null) {
+                          Navigator.pop(context, updatedData);
+                        }
                       },
                       icon: const Icon(Icons.edit),
                       label: const Text('編集'),
