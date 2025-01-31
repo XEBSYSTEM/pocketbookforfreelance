@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'tabs/company_list_tab.dart';
 import 'tabs/schedule_tab.dart';
+import 'db/database_helper.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // データベースの初期化とパスの確認
+  final dbHelper = DatabaseHelper.instance;
+  await dbHelper.database;
+
   runApp(const MyApp());
 }
 
