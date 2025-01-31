@@ -16,13 +16,16 @@ class DatabaseHelper {
 
   Future<Database> _initDB(String filePath) async {
     final dbPath = await getDatabasesPath();
-    print('Database Directory: $dbPath'); // データベースディレクトリを出力
+    print('Current Directory: ${Directory.current.path}');
+    print('Database Directory: $dbPath');
+    print('Database File: $filePath');
 
     final path = join(dbPath, filePath);
-    print('Full Database Path: $path'); // 完全なパスを出力
+    print('Full Database Path: $path');
 
     // ディレクトリが存在することを確認
     final dir = Directory(dbPath);
+    print('Directory exists: ${dir.existsSync()}');
     if (!dir.existsSync()) {
       print('Creating directory: $dbPath');
       dir.createSync(recursive: true);
