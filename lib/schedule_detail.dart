@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'schedule_form.dart';
 
 class ScheduleDetail extends StatelessWidget {
   final Map<String, dynamic> scheduleData;
@@ -58,23 +59,89 @@ class ScheduleDetail extends StatelessWidget {
       appBar: AppBar(
         title: const Text('スケジュール詳細'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildInfoTile('タイトル', scheduleData['title'] ?? ''),
-            _buildInfoTile('日付', dateStr),
-            _buildInfoTile('時間', timeStr),
-            _buildInfoTile('種別', scheduleData['meetingType'] ?? ''),
-            if (scheduleData['url']?.isNotEmpty ?? false)
-              _buildInfoTile('URL', scheduleData['url'] ?? ''),
-            _buildInfoTile('エージェント', scheduleData['agent'] ?? ''),
-            _buildInfoTile('エンド企業', scheduleData['endCompany'] ?? ''),
-            if (scheduleData['memo']?.isNotEmpty ?? false)
-              _buildInfoTile('メモ', scheduleData['memo'] ?? ''),
-          ],
-        ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildInfoTile('タイトル', scheduleData['title'] ?? ''),
+                  _buildInfoTile('日付', dateStr),
+                  _buildInfoTile('時間', timeStr),
+                  _buildInfoTile('種別', scheduleData['meetingType'] ?? ''),
+                  if (scheduleData['url']?.isNotEmpty ?? false)
+                    _buildInfoTile('URL', scheduleData['url'] ?? ''),
+                  _buildInfoTile('エージェント', scheduleData['agent'] ?? ''),
+                  _buildInfoTile('エンド企業', scheduleData['endCompany'] ?? ''),
+                  if (scheduleData['memo']?.isNotEmpty ?? false)
+                    _buildInfoTile('メモ', scheduleData['memo'] ?? ''),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ScheduleForm(
+                          initialDate: scheduleData['date'],
+                          initialData: scheduleData,
+                          isEditing: true,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  label: const Text('編集'),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(120, 40),
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('スケジュールの削除'),
+                        content:
+                            Text('「${scheduleData['title']}」を削除してもよろしいですか？'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('キャンセル'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            style: TextButton.styleFrom(
+                                foregroundColor: Colors.red),
+                            child: const Text('削除'),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirmed == true) {
+                      Navigator.pop(context, {'action': 'delete'});
+                    }
+                  },
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  label: const Text('削除'),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(120, 40),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -198,8 +198,8 @@ class _ScheduleTabState extends State<ScheduleTab> {
               '${event['time']}　${event['title']}',
               style: const TextStyle(fontSize: 16),
             ),
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => ScheduleDetail(
@@ -210,22 +210,24 @@ class _ScheduleTabState extends State<ScheduleTab> {
                   ),
                 ),
               );
+
+              if (result != null && result['action'] == 'delete' && mounted) {
+                setState(() {
+                  final key = DateTime(
+                    _selectedDay!.year,
+                    _selectedDay!.month,
+                    _selectedDay!.day,
+                  );
+                  final dayEvents = _events[key];
+                  if (dayEvents != null) {
+                    dayEvents.removeAt(index);
+                    if (dayEvents.isEmpty) {
+                      _events.remove(key);
+                    }
+                  }
+                });
+              }
             },
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.blue),
-                  onPressed: () => _editSchedule(index),
-                  tooltip: '編集',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _deleteSchedule(index),
-                  tooltip: '削除',
-                ),
-              ],
-            ),
           ),
         );
       },
