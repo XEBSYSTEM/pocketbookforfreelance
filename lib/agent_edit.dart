@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'db/database_helper.dart';
-import 'agent_detail.dart';
-import 'end_company_detail.dart';
-import 'intermediary_company_detail.dart';
+import 'company_detail.dart';
 
 class AgentEdit extends StatefulWidget {
   final int agentId;
@@ -41,14 +39,13 @@ class _AgentEditState extends State<AgentEdit> {
   // 中間請け企業固有のフィールド
   late String _commission;
 
-  // 企業タイプ（'agent', 'end', 'intermediary'）
-  late String _companyType;
+  late CompanyType _companyType;
 
   @override
   void initState() {
     super.initState();
     // 初期値の設定
-    _companyType = widget.initialData['company_type'] ?? 'agent';
+    _companyType = CompanyType.agent;
     _companyName = widget.initialData['company_name'] ?? '';
     _personInCharge = widget.initialData['person_in_charge'] ?? '';
     _email = widget.initialData['person_email'] ?? '';
@@ -71,11 +68,11 @@ class _AgentEditState extends State<AgentEdit> {
 
   String _getTitle() {
     switch (_companyType) {
-      case 'end':
+      case CompanyType.end:
         return 'エンド企業編集';
-      case 'intermediary':
+      case CompanyType.intermediary:
         return '中間請け企業編集';
-      default:
+      case CompanyType.agent:
         return 'エージェント編集';
     }
   }
@@ -91,27 +88,28 @@ class _AgentEditState extends State<AgentEdit> {
           // 企業タイプ選択
           Padding(
             padding: const EdgeInsets.all(16),
-            child: DropdownButtonFormField<String>(
+            child: DropdownButtonFormField<CompanyType>(
               decoration: const InputDecoration(
                 labelText: '企業タイプ',
                 filled: true,
               ),
               value: _companyType,
-              items: const [
-                DropdownMenuItem(
-                  value: 'agent',
-                  child: Text('エージェント'),
-                ),
-                DropdownMenuItem(
-                  value: 'end',
-                  child: Text('エンド企業'),
-                ),
-                DropdownMenuItem(
-                  value: 'intermediary',
-                  child: Text('中間請け企業'),
-                ),
-              ],
-              onChanged: (String? newValue) {
+              items: CompanyType.values.map((type) {
+                String label;
+                switch (type) {
+                  case CompanyType.agent:
+                    label = 'エージェント';
+                  case CompanyType.end:
+                    label = 'エンド企業';
+                  case CompanyType.intermediary:
+                    label = '中間請け企業';
+                }
+                return DropdownMenuItem(
+                  value: type,
+                  child: Text(label),
+                );
+              }).toList(),
+              onChanged: (CompanyType? newValue) {
                 if (newValue != null) {
                   setState(() {
                     _companyType = newValue;
@@ -250,7 +248,7 @@ class _AgentEditState extends State<AgentEdit> {
   List<Widget> _buildTypeSpecificFields() {
     final fields = <Widget>[];
 
-    if (_companyType == 'agent') {
+    if (_companyType == CompanyType.agent) {
       // エージェント固有のフィールド
       fields.addAll([
         const SizedBox(height: 16),
@@ -332,7 +330,7 @@ class _AgentEditState extends State<AgentEdit> {
       ]);
 
       // 中間請け企業固有のフィールド
-      if (_companyType == 'intermediary') {
+      if (_companyType == CompanyType.intermediary) {
         fields.add(
           Column(
             children: [
@@ -360,20 +358,20 @@ class _AgentEditState extends State<AgentEdit> {
   // 更新用のデータを取得（データベースのカラム名に合わせる）
   Map<String, dynamic> _getUpdatedData() {
     final data = {
-      'company_name': _companyName,
-      'person_in_charge': _personInCharge,
-      'person_email': _email,
-      'person_phone': _phone,
+      'companyName': _companyName,
+      'personInCharge': _personInCharge,
+      'personEmail': _email,
+      'personPhone': _phone,
       'address': _address,
-      'company_type': _companyType,
+      'companyType': _companyType.name,
     };
 
-    if (_companyType == 'agent') {
+    if (_companyType == CompanyType.agent) {
       data.addAll({
-        'branch_address': _branchAddress,
-        'branch_phone': _branchPhone,
-        'head_office_address': _headOfficeAddress,
-        'head_office_phone': _headOfficePhone,
+        'branchAddress': _branchAddress,
+        'branchPhone': _branchPhone,
+        'headOfficeAddress': _headOfficeAddress,
+        'headOfficePhone': _headOfficePhone,
       });
     } else {
       data.addAll({
@@ -381,7 +379,7 @@ class _AgentEditState extends State<AgentEdit> {
         'position': _position,
       });
 
-      if (_companyType == 'intermediary') {
+      if (_companyType == CompanyType.intermediary) {
         data['commission'] = _commission;
       }
     }
@@ -396,21 +394,14 @@ class _AgentEditState extends State<AgentEdit> {
 
   // 詳細画面に遷移
   void _navigateToDetail(Map<String, dynamic> data) {
-    Widget detailScreen;
-    switch (_companyType) {
-      case 'end':
-        detailScreen = EndCompanyDetail(companyId: widget.agentId);
-        break;
-      case 'intermediary':
-        detailScreen = IntermediaryCompanyDetail(companyId: widget.agentId);
-        break;
-      default:
-        detailScreen = AgentDetail(agentId: widget.agentId);
-    }
-
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => detailScreen),
+      MaterialPageRoute(
+        builder: (context) => CompanyDetail(
+          companyId: widget.agentId,
+          companyType: _companyType,
+        ),
+      ),
     );
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'db/database_helper.dart';
-import 'intermediary_company_detail.dart';
+import 'company_detail.dart';
 
 class IntermediaryCompanyEdit extends StatefulWidget {
   final int companyId;
@@ -180,14 +180,15 @@ class _IntermediaryCompanyEditState extends State<IntermediaryCompanyEdit> {
                     _formKey.currentState!.save();
                     // フォームの値をMapにまとめる
                     final updatedData = {
-                      'company_name': _companyName,
-                      'branch_address': _address,
-                      'branch_phone': _phone,
-                      'person_in_charge': _personInCharge,
+                      'companyName': _companyName,
+                      'branchAddress': _address,
+                      'branchPhone': _phone,
+                      'personInCharge': _personInCharge,
                       'department': _department,
                       'position': _position,
-                      'person_email': _email,
+                      'personEmail': _email,
                       'commission': _commission,
+                      'companyType': CompanyType.intermediary.name,
                     };
                     // データベースを更新
                     _updateCompany(updatedData).then((_) {
@@ -195,8 +196,9 @@ class _IntermediaryCompanyEditState extends State<IntermediaryCompanyEdit> {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => IntermediaryCompanyDetail(
+                          builder: (context) => CompanyDetail(
                             companyId: widget.companyId,
+                            companyType: CompanyType.intermediary,
                           ),
                         ),
                       );
@@ -219,10 +221,6 @@ class _IntermediaryCompanyEditState extends State<IntermediaryCompanyEdit> {
   }
 
   Future<void> _updateCompany(Map<String, dynamic> data) async {
-    // company_typeを'intermediary'に設定
-    data['company_type'] = 'intermediary';
-
-    // データベースを更新
     await DatabaseHelper.instance.updateCompany(widget.companyId, data);
   }
 }

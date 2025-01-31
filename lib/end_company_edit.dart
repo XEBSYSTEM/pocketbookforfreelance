@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'db/database_helper.dart';
-import 'end_company_detail.dart';
+import 'company_detail.dart';
 
 class EndCompanyEdit extends StatefulWidget {
   final int companyId;
@@ -163,13 +163,14 @@ class _EndCompanyEditState extends State<EndCompanyEdit> {
                     _formKey.currentState!.save();
                     // フォームの値をMapにまとめる
                     final updatedData = {
-                      'company_name': _companyName,
-                      'branch_address': _address,
-                      'branch_phone': _phone,
-                      'person_in_charge': _personInCharge,
+                      'companyName': _companyName,
+                      'branchAddress': _address,
+                      'branchPhone': _phone,
+                      'personInCharge': _personInCharge,
                       'department': _department,
                       'position': _position,
-                      'person_email': _email,
+                      'personEmail': _email,
+                      'companyType': CompanyType.end.name,
                     };
                     // データベースを更新
                     _updateEndCompany(updatedData).then((_) {
@@ -177,8 +178,9 @@ class _EndCompanyEditState extends State<EndCompanyEdit> {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => EndCompanyDetail(
+                          builder: (context) => CompanyDetail(
                             companyId: widget.companyId,
+                            companyType: CompanyType.end,
                           ),
                         ),
                       );
@@ -201,10 +203,6 @@ class _EndCompanyEditState extends State<EndCompanyEdit> {
   }
 
   Future<void> _updateEndCompany(Map<String, dynamic> data) async {
-    // company_typeを'end'に設定
-    data['company_type'] = 'end';
-
-    // データベースを更新
     await DatabaseHelper.instance.updateCompany(widget.companyId, data);
   }
 }
