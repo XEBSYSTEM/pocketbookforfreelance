@@ -25,6 +25,12 @@ class _CompanyListTabState extends State<CompanyListTab> {
     _loadCompanies();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadCompanies();
+  }
+
   Future<void> _loadCompanies() async {
     setState(() => _isLoading = true);
 
@@ -76,14 +82,15 @@ class _CompanyListTabState extends State<CompanyListTab> {
                                   subtitle: Text(
                                       '担当者: ${agent['person_in_charge'] ?? '未設定'}'),
                                   trailing: const Icon(Icons.arrow_forward_ios),
-                                  onTap: () {
-                                    Navigator.push(
+                                  onTap: () async {
+                                    await Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) =>
                                             AgentDetail(agentData: agent),
                                       ),
                                     );
+                                    _loadCompanies(); // 画面に戻ってきたらデータを再取得
                                   },
                                 );
                               },
@@ -93,7 +100,7 @@ class _CompanyListTabState extends State<CompanyListTab> {
                 padding: const EdgeInsets.all(16),
                 child: ElevatedButton.icon(
                   onPressed: () async {
-                    final result = await Navigator.push(
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const CompanyForm(
@@ -102,10 +109,7 @@ class _CompanyListTabState extends State<CompanyListTab> {
                         ),
                       ),
                     );
-                    if (result != null) {
-                      // TODO: 登録されたエージェントデータを保存
-                      print('新しいエージェント: $result');
-                    }
+                    _loadCompanies(); // 画面に戻ってきたらデータを再取得
                   },
                   icon: const Icon(Icons.add),
                   label: const Text('エージェントを追加'),
@@ -148,24 +152,16 @@ class _CompanyListTabState extends State<CompanyListTab> {
                                   subtitle: Text(
                                       '担当者: ${company['person_in_charge'] ?? '未設定'}'),
                                   trailing: const Icon(Icons.arrow_forward_ios),
-                                  onTap: () {
-                                    // TODO: 実際のデータを渡すように修正
-                                    Navigator.push(
+                                  onTap: () async {
+                                    await Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => EndCompanyDetail(
-                                          endCompanyData: {
-                                            'companyName': 'エンド企業${index + 1}',
-                                            'address': '東京都渋谷区...',
-                                            'phone': '03-xxxx-xxxx',
-                                            'personInCharge': '担当者名',
-                                            'department': '人事部',
-                                            'position': '部長',
-                                            'email': 'test@example.com',
-                                          },
+                                          endCompanyData: company,
                                         ),
                                       ),
                                     );
+                                    _loadCompanies(); // 画面に戻ってきたらデータを再取得
                                   },
                                 );
                               },
@@ -175,7 +171,7 @@ class _CompanyListTabState extends State<CompanyListTab> {
                 padding: const EdgeInsets.all(16),
                 child: ElevatedButton.icon(
                   onPressed: () async {
-                    final result = await Navigator.push(
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const CompanyForm(
@@ -184,10 +180,7 @@ class _CompanyListTabState extends State<CompanyListTab> {
                         ),
                       ),
                     );
-                    if (result != null) {
-                      // TODO: 登録されたエンド企業データを保存
-                      print('新しいエンド企業: $result');
-                    }
+                    _loadCompanies(); // 画面に戻ってきたらデータを再取得
                   },
                   icon: const Icon(Icons.add),
                   label: const Text('エンド企業を追加'),
@@ -230,26 +223,17 @@ class _CompanyListTabState extends State<CompanyListTab> {
                                   subtitle: Text(
                                       '担当者: ${company['person_in_charge'] ?? '未設定'}'),
                                   trailing: const Icon(Icons.arrow_forward_ios),
-                                  onTap: () {
-                                    // TODO: 実際のデータを渡すように修正
-                                    Navigator.push(
+                                  onTap: () async {
+                                    await Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) =>
                                             IntermediaryCompanyDetail(
-                                          intermediaryCompanyData: {
-                                            'companyName': '中間請け企業${index + 1}',
-                                            'address': '東京都渋谷区...',
-                                            'phone': '03-xxxx-xxxx',
-                                            'personInCharge': '担当者名',
-                                            'department': '営業部',
-                                            'position': '部長',
-                                            'email': 'test@example.com',
-                                            'commission': '10%',
-                                          },
+                                          intermediaryCompanyData: company,
                                         ),
                                       ),
                                     );
+                                    _loadCompanies(); // 画面に戻ってきたらデータを再取得
                                   },
                                 );
                               },
@@ -259,7 +243,7 @@ class _CompanyListTabState extends State<CompanyListTab> {
                 padding: const EdgeInsets.all(16),
                 child: ElevatedButton.icon(
                   onPressed: () async {
-                    final result = await Navigator.push(
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const CompanyForm(
@@ -268,10 +252,7 @@ class _CompanyListTabState extends State<CompanyListTab> {
                         ),
                       ),
                     );
-                    if (result != null) {
-                      // TODO: 登録された中間請け企業データを保存
-                      print('新しい中間請け企業: $result');
-                    }
+                    _loadCompanies(); // 画面に戻ってきたらデータを再取得
                   },
                   icon: const Icon(Icons.add),
                   label: const Text('中間請け企業を追加'),
