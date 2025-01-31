@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'db/database_helper.dart';
 
-class IntermediaryCompanyForm extends StatefulWidget {
-  const IntermediaryCompanyForm({super.key});
+class AgentForm extends StatefulWidget {
+  const AgentForm({super.key});
 
   @override
-  State<IntermediaryCompanyForm> createState() =>
-      _IntermediaryCompanyFormState();
+  State<AgentForm> createState() => _AgentFormState();
 }
 
-class _IntermediaryCompanyFormState extends State<IntermediaryCompanyForm> {
+class _AgentFormState extends State<AgentForm> {
   final _formKey = GlobalKey<FormState>();
 
   // フォームの入力値
@@ -26,7 +25,7 @@ class _IntermediaryCompanyFormState extends State<IntermediaryCompanyForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('中間請け企業登録'),
+        title: const Text('エージェント登録'),
       ),
       body: Form(
         key: _formKey,
@@ -150,8 +149,8 @@ class _IntermediaryCompanyFormState extends State<IntermediaryCompanyForm> {
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
                     // フォームの値をMapにまとめる
-                    final intermediaryCompanyData = {
-                      'companyType': 3, // 中間請け企業は3
+                    final agentData = {
+                      'companyType': 1, // エージェントは1
                       'companyName': _companyName,
                       'branchAddress': _branchAddress,
                       'branchPhone': _branchPhone,
@@ -165,15 +164,15 @@ class _IntermediaryCompanyFormState extends State<IntermediaryCompanyForm> {
                     // データベースに保存
                     try {
                       final id = await DatabaseHelper.instance
-                          .createCompany(intermediaryCompanyData);
+                          .createCompany(agentData);
                       if (context.mounted) {
-                        Navigator.pop(context, intermediaryCompanyData);
+                        Navigator.pop(context, agentData);
                       }
                     } catch (e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('中間請け企業の登録に失敗しました'),
+                            content: Text('エージェントの登録に失敗しました'),
                             backgroundColor: Colors.red,
                           ),
                         );

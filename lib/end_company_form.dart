@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'db/database_helper.dart';
 
 class EndCompanyForm extends StatefulWidget {
   const EndCompanyForm({super.key});
@@ -12,12 +13,13 @@ class _EndCompanyFormState extends State<EndCompanyForm> {
 
   // フォームの入力値
   String _companyName = '';
-  String _address = '';
-  String _phone = '';
+  String _branchAddress = '';
+  String _branchPhone = '';
+  String _headOfficeAddress = '';
+  String _headOfficePhone = '';
   String _personInCharge = '';
-  String _department = '';
-  String _position = '';
-  String _email = '';
+  String _personPhone = '';
+  String _personEmail = '';
 
   @override
   Widget build(BuildContext context) {
@@ -50,36 +52,62 @@ class _EndCompanyFormState extends State<EndCompanyForm> {
               ),
               const SizedBox(height: 16),
 
-              // 住所
+              // 支社住所
               TextFormField(
                 decoration: const InputDecoration(
-                  labelText: '住所',
+                  labelText: '支社住所',
                   hintText: '例：東京都渋谷区...',
                   filled: true,
                 ),
                 onSaved: (value) {
-                  _address = value ?? '';
+                  _branchAddress = value ?? '';
                 },
               ),
               const SizedBox(height: 16),
 
-              // 電話番号
+              // 支社電話番号
               TextFormField(
                 decoration: const InputDecoration(
-                  labelText: '電話番号',
+                  labelText: '支社電話番号',
                   hintText: '例：03-1234-5678',
                   filled: true,
                 ),
                 onSaved: (value) {
-                  _phone = value ?? '';
+                  _branchPhone = value ?? '';
                 },
               ),
               const SizedBox(height: 16),
 
-              // 担当者名
+              // 本社住所
               TextFormField(
                 decoration: const InputDecoration(
-                  labelText: '担当者名',
+                  labelText: '本社住所',
+                  hintText: '例：東京都千代田区...',
+                  filled: true,
+                ),
+                onSaved: (value) {
+                  _headOfficeAddress = value ?? '';
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // 本社電話番号
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: '本社電話番号',
+                  hintText: '例：03-1234-5678',
+                  filled: true,
+                ),
+                onSaved: (value) {
+                  _headOfficePhone = value ?? '';
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // 担当者
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: '担当者',
                   hintText: '例：山田太郎',
                   filled: true,
                 ),
@@ -89,67 +117,70 @@ class _EndCompanyFormState extends State<EndCompanyForm> {
               ),
               const SizedBox(height: 16),
 
-              // 部署
+              // 担当者電話番号
               TextFormField(
                 decoration: const InputDecoration(
-                  labelText: '部署',
-                  hintText: '例：人事部',
+                  labelText: '担当者電話番号',
+                  hintText: '例：090-1234-5678',
                   filled: true,
                 ),
                 onSaved: (value) {
-                  _department = value ?? '';
+                  _personPhone = value ?? '';
                 },
               ),
               const SizedBox(height: 16),
 
-              // 役職
+              // 担当者メールアドレス
               TextFormField(
                 decoration: const InputDecoration(
-                  labelText: '役職',
-                  hintText: '例：部長',
-                  filled: true,
-                ),
-                onSaved: (value) {
-                  _position = value ?? '';
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // メールアドレス
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'メールアドレス',
+                  labelText: '担当者メールアドレス',
                   hintText: '例：yamada@example.com',
                   filled: true,
                 ),
                 onSaved: (value) {
-                  _email = value ?? '';
+                  _personEmail = value ?? '';
                 },
               ),
               const SizedBox(height: 32),
 
               // 登録ボタン
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
                     // フォームの値をMapにまとめる
                     final endCompanyData = {
+                      'companyType': 2, // エンド企業は2
                       'companyName': _companyName,
-                      'address': _address,
-                      'phone': _phone,
+                      'branchAddress': _branchAddress,
+                      'branchPhone': _branchPhone,
+                      'headOfficeAddress': _headOfficeAddress,
+                      'headOfficePhone': _headOfficePhone,
                       'personInCharge': _personInCharge,
-                      'department': _department,
-                      'position': _position,
-                      'email': _email,
+                      'personPhone': _personPhone,
+                      'personEmail': _personEmail,
                     };
-                    // 前の画面に値を返す
-                    Navigator.pop(context, endCompanyData);
+
+                    // データベースに保存
+                    try {
+                      final id = await DatabaseHelper.instance
+                          .createCompany(endCompanyData);
+                      if (context.mounted) {
+                        Navigator.pop(context, endCompanyData);
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('エンド企業の登録に失敗しました'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 ),
