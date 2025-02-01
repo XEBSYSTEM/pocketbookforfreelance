@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../schedule_form.dart';
+import '../schedule_edit.dart';
 import '../schedule_detail.dart';
+import '../db/database_helper.dart';
 
 class ScheduleTab extends StatefulWidget {
   const ScheduleTab({super.key});
@@ -14,68 +16,75 @@ class _ScheduleTabState extends State<ScheduleTab> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+  Map<DateTime, List<Map<String, dynamic>>> _events = {};
 
-  // サンプルの予定データ
-  final Map<DateTime, List<Map<String, dynamic>>> _events = {
-    DateTime(2025, 1, 30): [
-      {
-        'time': '09:00',
-        'title': '朝のミーティング',
-        'isAllDay': false,
-        'startTime': const TimeOfDay(hour: 9, minute: 0),
-        'endTime': const TimeOfDay(hour: 10, minute: 0),
-        'meetingType': '対面',
-        'url': 'https://example.com',
-        'agent': 'エージェントA',
-        'endCompany': 'エンドA',
-        'memo': '重要な案件について議論する予定',
-      },
-      {
-        'time': '13:00',
-        'title': 'ランチミーティング',
-        'isAllDay': false,
-        'startTime': const TimeOfDay(hour: 13, minute: 0),
-        'endTime': const TimeOfDay(hour: 14, minute: 0),
-        'meetingType': 'リモート',
-        'url': 'https://meet.example.com',
-        'agent': 'エージェントB',
-        'endCompany': 'エンドB',
-        'memo': 'ランチを取りながらの打ち合わせ',
-      },
-    ],
-    DateTime(2025, 1, 31): [
-      {
-        'time': '10:00',
-        'title': 'プロジェクト会議',
-        'isAllDay': false,
-        'startTime': const TimeOfDay(hour: 10, minute: 0),
-        'endTime': const TimeOfDay(hour: 11, minute: 0),
-        'meetingType': '対面',
-        'url': '',
-        'agent': 'エージェントA',
-        'endCompany': 'エンドA',
-        'memo': '進捗報告と今後のスケジュール確認',
-      },
-      {
-        'time': '15:00',
-        'title': 'クライアントとの打ち合わせ',
-        'isAllDay': false,
-        'startTime': const TimeOfDay(hour: 15, minute: 0),
-        'endTime': const TimeOfDay(hour: 16, minute: 0),
-        'meetingType': 'リモート',
-        'url': 'https://client.example.com',
-        'agent': 'エージェントB',
-        'endCompany': 'エンドB',
-        'memo': '要件定義の最終確認',
-      },
-    ],
-  };
+  @override
+  void initState() {
+    super.initState();
+    _loadSchedules();
+  }
+
+  Future<void> _loadSchedules() async {
+    try {
+      // 現在の月の最初の日と最後の日を取得
+      final now = _focusedDay;
+      final firstDay = DateTime(now.year, now.month, 1);
+      final lastDay = DateTime(now.year, now.month + 1, 0);
+
+      // 月全体のスケジュールを取得
+      final schedules = await Future.wait(
+        List.generate(
+          lastDay.day,
+          (index) => DatabaseHelper.instance
+              .readSchedulesByDate(DateTime(now.year, now.month, index + 1)),
+        ),
+      );
+
+      final timeStringToTimeOfDay = (String? timeStr) {
+        if (timeStr == null) return null;
+        final parts = timeStr.split(':');
+        return TimeOfDay(
+            hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+      };
+
+      // 新しいイベントマップを作成
+      final newEvents = <DateTime, List<Map<String, dynamic>>>{};
+
+      for (var i = 0; i < lastDay.day; i++) {
+        final date = DateTime(now.year, now.month, i + 1);
+        final key = DateTime(date.year, date.month, date.day);
+
+        if (schedules[i].isNotEmpty) {
+          newEvents[key] = schedules[i]
+              .map((schedule) => {
+                    'id': schedule['id'],
+                    'title': schedule['title'],
+                    'isAllDay': schedule['is_all_day'] == 1,
+                    'startTime': timeStringToTimeOfDay(schedule['start_time']),
+                    'endTime': timeStringToTimeOfDay(schedule['end_time']),
+                    'meetingType': schedule['meeting_type'],
+                    'url': schedule['url'],
+                    'agent': schedule['agent_id']?.toString(),
+                    'endCompany': schedule['end_company_id']?.toString(),
+                    'memo': schedule['memo'],
+                  })
+              .toList();
+        }
+      }
+
+      setState(() {
+        _events = newEvents;
+      });
+    } catch (e) {
+      print('Error loading schedules: $e');
+    }
+  }
 
   List<Map<String, dynamic>> _getEventsForDay(DateTime day) {
     return _events[DateTime(day.year, day.month, day.day)] ?? [];
   }
 
-  void _addSchedule() async {
+  Future<void> _addSchedule() async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -86,45 +95,49 @@ class _ScheduleTabState extends State<ScheduleTab> {
     );
 
     if (result != null && mounted) {
-      setState(() {
-        final date = _selectedDay ?? _focusedDay;
-        final key = DateTime(date.year, date.month, date.day);
-        if (!_events.containsKey(key)) {
-          _events[key] = [];
-        }
-        _events[key]!.add(result as Map<String, dynamic>);
-      });
+      try {
+        await DatabaseHelper.instance
+            .createSchedule(result as Map<String, dynamic>);
+        _loadSchedules();
+      } catch (e) {
+        print('Error creating schedule: $e');
+      }
     }
   }
 
-  void _editSchedule(int index) async {
+  Future<void> _editSchedule(int index) async {
     if (_selectedDay == null) return;
 
     final events = _getEventsForDay(_selectedDay!);
     if (index >= events.length) return;
 
     final event = events[index];
+    final scheduleId = _events[DateTime(
+            _selectedDay!.year, _selectedDay!.month, _selectedDay!.day)]![index]
+        ['id'];
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ScheduleForm(
-          initialDate: _selectedDay,
-          initialData: event,
-          isEditing: true,
+        builder: (context) => ScheduleEdit(
+          initialData: {
+            ...event,
+            'date': _selectedDay,
+          },
+          scheduleId: scheduleId,
         ),
       ),
     );
 
-    if (result != null && mounted) {
-      setState(() {
-        final key = DateTime(
-            _selectedDay!.year, _selectedDay!.month, _selectedDay!.day);
-        _events[key]![index] = result as Map<String, dynamic>;
-      });
+    if (result == true && mounted) {
+      await _loadSchedules();
     }
   }
 
   Future<void> _deleteSchedule(int index) async {
+    final scheduleId = _events[DateTime(
+            _selectedDay!.year, _selectedDay!.month, _selectedDay!.day)]![index]
+        ['id'];
     if (_selectedDay == null) return;
 
     final events = _getEventsForDay(_selectedDay!);
@@ -151,17 +164,13 @@ class _ScheduleTabState extends State<ScheduleTab> {
     );
 
     if (confirmed == true && mounted) {
-      setState(() {
-        final key = DateTime(
-            _selectedDay!.year, _selectedDay!.month, _selectedDay!.day);
-        final dayEvents = _events[key];
-        if (dayEvents != null) {
-          dayEvents.removeAt(index);
-          if (dayEvents.isEmpty) {
-            _events.remove(key);
-          }
-        }
-      });
+      try {
+        await DatabaseHelper.instance.deleteSchedule(scheduleId);
+        setState(() {});
+        await _loadSchedules();
+      } catch (e) {
+        print('Error deleting schedule: $e');
+      }
     }
   }
 
@@ -181,7 +190,9 @@ class _ScheduleTabState extends State<ScheduleTab> {
       return const Center(child: Text('日付を選択してください'));
     }
 
-    final events = _getEventsForDay(_selectedDay!);
+    final events = _events[DateTime(
+            _selectedDay!.year, _selectedDay!.month, _selectedDay!.day)] ??
+        [];
     if (events.isEmpty) {
       return const Center(child: Text('予定はありません'));
     }
@@ -195,7 +206,7 @@ class _ScheduleTabState extends State<ScheduleTab> {
           margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
           child: ListTile(
             title: Text(
-              '${event['time']}　${event['title']}',
+              '${event['isAllDay'] ? '終日' : event['startTime'] != null ? '${event['startTime'].format(context)}' : ''}　${event['title']}',
               style: const TextStyle(fontSize: 16),
             ),
             onTap: () async {
@@ -211,21 +222,19 @@ class _ScheduleTabState extends State<ScheduleTab> {
                 ),
               );
 
-              if (result != null && result['action'] == 'delete' && mounted) {
-                setState(() {
-                  final key = DateTime(
-                    _selectedDay!.year,
-                    _selectedDay!.month,
-                    _selectedDay!.day,
-                  );
-                  final dayEvents = _events[key];
-                  if (dayEvents != null) {
-                    dayEvents.removeAt(index);
-                    if (dayEvents.isEmpty) {
-                      _events.remove(key);
+              if (result != null && mounted) {
+                if (result['action'] == 'delete' ||
+                    result['action'] == 'edited') {
+                  try {
+                    if (result['action'] == 'delete') {
+                      final scheduleId = events[index]['id'];
+                      await DatabaseHelper.instance.deleteSchedule(scheduleId);
                     }
+                    await _loadSchedules();
+                  } catch (e) {
+                    print('Error processing schedule action: $e');
                   }
-                });
+                }
               }
             },
           ),
@@ -252,6 +261,7 @@ class _ScheduleTabState extends State<ScheduleTab> {
                 _selectedDay = selectedDay;
                 _focusedDay = focusedDay;
               });
+              _loadSchedules();
             }
           },
           onFormatChanged: (format) {

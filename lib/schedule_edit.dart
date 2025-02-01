@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'company_detail.dart';
 import 'db/database_helper.dart';
+import 'db/schedule_repository.dart';
 
 class ScheduleEdit extends StatefulWidget {
   final Map<String, dynamic> initialData;
+  final int scheduleId;
 
   const ScheduleEdit({
     super.key,
     required this.initialData,
+    required this.scheduleId,
   });
 
   @override
@@ -115,20 +118,42 @@ class _ScheduleEditState extends State<ScheduleEdit> {
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      Navigator.pop(context, {
-        'title': _titleController.text,
-        'date': _selectedDate,
-        'isAllDay': _isAllDay,
-        'startTime': _startTime,
-        'endTime': _endTime,
-        'meetingType': _meetingType,
-        'url': _urlController.text,
-        'agent': _selectedAgent,
-        'endCompany': _selectedEndCompany,
-        'memo': _memoController.text,
-      });
+  Future<void> _submitForm() async {
+    if (_formKey.currentState!.validate() &&
+        _selectedDate != null &&
+        (_isAllDay || (_startTime != null && _endTime != null))) {
+      try {
+        final db = await DatabaseHelper.instance.database;
+        final repository = ScheduleRepository(db);
+
+        final scheduleData = {
+          'title': _titleController.text,
+          'date': _selectedDate,
+          'isAllDay': _isAllDay,
+          'startTime':
+              _startTime != null ? _formatTimeOfDay(_startTime!) : null,
+          'endTime': _endTime != null ? _formatTimeOfDay(_endTime!) : null,
+          'meetingType': _meetingType,
+          'url': _urlController.text,
+          'agent': _selectedAgent,
+          'endCompany': _selectedEndCompany,
+          'memo': _memoController.text,
+        };
+
+        await repository.updateSchedule(widget.scheduleId, scheduleData);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('スケジュールを更新しました')),
+          );
+          Navigator.pop(context, true);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('エラーが発生しました: $e')),
+          );
+        }
+      }
     }
   }
 

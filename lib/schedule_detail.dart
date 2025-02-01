@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'schedule_form.dart';
+import 'schedule_edit.dart';
 
 class ScheduleDetail extends StatelessWidget {
   final Map<String, dynamic> scheduleData;
@@ -87,17 +87,20 @@ class ScheduleDetail extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () async {
+                    final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ScheduleForm(
-                          initialDate: scheduleData['date'],
+                        builder: (context) => ScheduleEdit(
                           initialData: scheduleData,
-                          isEditing: true,
+                          scheduleId: scheduleData['id'],
                         ),
                       ),
                     );
+
+                    if (result == true) {
+                      Navigator.pop(context, {'action': 'edited'});
+                    }
                   },
                   icon: const Icon(Icons.edit, color: Colors.blue),
                   label: const Text('編集'),
