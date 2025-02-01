@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'company_detail.dart';
+import 'company_form.dart';
 import 'db/database_helper.dart';
 import 'db/schedule_repository.dart';
 
@@ -450,6 +451,52 @@ class _ScheduleEditState extends State<ScheduleEdit> {
                 minLines: 3,
               ),
               const SizedBox(height: 24),
+
+              // エージェントとエンド企業の登録ボタン
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CompanyForm(
+                              title: 'エージェント登録',
+                              companyType: CompanyType.agent,
+                            ),
+                          ),
+                        ).then((_) => _loadCompanies());
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text('エージェント登録'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CompanyForm(
+                              title: 'エンド企業登録',
+                              companyType: CompanyType.end,
+                            ),
+                          ),
+                        ).then((_) => _loadCompanies());
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text('エンド企業登録'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
 
               // 更新ボタン
               SizedBox(
