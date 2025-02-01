@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import '../company_detail.dart';
+import '../company_detail.dart' show CompanyType;
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -24,6 +24,14 @@ class DatabaseHelper {
     final path = join(dbPath, filePath);
     print('Full Database Path: $path');
 
+    // ファイルの存在確認
+    final file = File(path);
+    if (file.existsSync()) {
+      print('Database file exists at: $path');
+      await file.delete();
+      print('Existing database file deleted');
+    }
+
     // ディレクトリが存在することを確認
     final dir = Directory(dbPath);
     print('Directory exists: ${dir.existsSync()}');
@@ -34,12 +42,103 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: _createDB,
     );
   }
 
   Future<void> _createDB(Database db, int version) async {
+    await _migrate(db, 0, version);
+  }
+
+  Future<void> _migrate(Database db, int oldVersion, int newVersion) async {
+    // 最新バージョンに達するまで順番にマイグレーションを実行
+    if (oldVersion < 1) {
+      await _createInitialTables(db);
+    }
+
+    if (oldVersion < 5) {
+      // バックアップテーブルの作成（schedulesテーブルが存在する場合のみ）
+      final tables = await db.query('sqlite_master',
+          where: 'type = ? AND name = ?', whereArgs: ['table', 'schedules']);
+
+      if (tables.isNotEmpty) {
+        await db.execute(
+            'CREATE TABLE schedules_backup AS SELECT * FROM schedules');
+
+        // 既存のテーブルを削除
+        await db.execute('DROP TABLE IF EXISTS schedules');
+
+        // 新しいスキーマでテーブルを再作成
+        // スケジュールテーブル
+        await db.execute('''
+        CREATE TABLE schedules (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          date DATE NOT NULL,
+          is_all_day BOOLEAN NOT NULL DEFAULT 0,
+          start_time TEXT,
+          end_time TEXT,
+          meeting_type TEXT,
+          url TEXT,
+          agent_id INTEGER,
+          end_company_id INTEGER,
+          memo TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (agent_id) REFERENCES companies (id),
+          FOREIGN KEY (end_company_id) REFERENCES companies (id)
+        )
+      ''');
+
+        // バックアップからデータを移行（日付のみを保持）
+        await db.execute('''
+        INSERT INTO schedules 
+        SELECT 
+          id,
+          title,
+          DATE(date),
+          is_all_day,
+          start_time,
+          end_time,
+          meeting_type,
+          url,
+          agent_id,
+          end_company_id,
+          memo,
+          created_at,
+          updated_at
+        FROM schedules_backup
+      ''');
+
+        // バックアップテーブルを削除
+        await db.execute('DROP TABLE IF EXISTS schedules_backup');
+      } else {
+        // schedulesテーブルが存在しない場合は新規作成
+        await db.execute('''
+          CREATE TABLE schedules (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            date DATE NOT NULL,
+            is_all_day BOOLEAN NOT NULL DEFAULT 0,
+            start_time TEXT,
+            end_time TEXT,
+            meeting_type TEXT,
+            url TEXT,
+            agent_id INTEGER,
+            end_company_id INTEGER,
+            memo TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (agent_id) REFERENCES companies (id),
+            FOREIGN KEY (end_company_id) REFERENCES companies (id)
+          )
+        ''');
+      }
+    }
+  }
+
+  Future<void> _createInitialTables(Database db) async {
     // 企業種別マスタテーブル
     await db.execute('''
       CREATE TABLE company_types (
@@ -75,7 +174,7 @@ class DatabaseHelper {
       CREATE TABLE schedules (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
-        date DATETIME NOT NULL,
+        date DATE NOT NULL,
         is_all_day BOOLEAN NOT NULL DEFAULT 0,
         start_time TEXT,
         end_time TEXT,
@@ -150,7 +249,7 @@ class DatabaseHelper {
   }
 
   // CompanyTypeをint型に変換するヘルパーメソッド
-  static int getCompanyTypeId(CompanyType type) {
+  int getCompanyTypeId(CompanyType type) {
     switch (type) {
       case CompanyType.agent:
         return 1;
@@ -230,6 +329,116 @@ class DatabaseHelper {
     final db = await instance.database;
     return await db.delete(
       'companies',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // スケジュールのCRUD操作
+  // 作成
+  Future<int> createSchedule(Map<String, dynamic> schedule) async {
+    try {
+      final db = await instance.database;
+
+      final data = {
+        'title': schedule['title'],
+        'date': DateTime(
+          schedule['date'].year,
+          schedule['date'].month,
+          schedule['date'].day,
+        ).toIso8601String(),
+        'is_all_day': schedule['isAllDay'] ? 1 : 0,
+        'start_time': schedule['startTime'] != null
+            ? '${schedule['startTime'].hour.toString().padLeft(2, '0')}:${schedule['startTime'].minute.toString().padLeft(2, '0')}'
+            : null,
+        'end_time': schedule['endTime'] != null
+            ? '${schedule['endTime'].hour.toString().padLeft(2, '0')}:${schedule['endTime'].minute.toString().padLeft(2, '0')}'
+            : null,
+        'meeting_type': schedule['meetingType'],
+        'url': schedule['url'],
+        'agent_id': schedule['agent'],
+        'end_company_id': schedule['endCompany'],
+        'memo': schedule['memo'],
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      return await db.insert('schedules', data);
+    } catch (e) {
+      print('Error creating schedule: $e');
+      throw Exception('スケジュールの登録に失敗しました: $e');
+    }
+  }
+
+  // 読み取り（日付指定）
+  Future<List<Map<String, dynamic>>> readSchedulesByDate(DateTime date) async {
+    final db = await instance.database;
+    final dateStr = DateTime(date.year, date.month, date.day).toIso8601String();
+    final nextDateStr =
+        DateTime(date.year, date.month, date.day + 1).toIso8601String();
+
+    return await db.query(
+      'schedules',
+      where: 'date >= ? AND date < ?',
+      whereArgs: [dateStr, nextDateStr],
+      orderBy: 'start_time ASC',
+    );
+  }
+
+  // 読み取り（1件）
+  Future<Map<String, dynamic>?> readSchedule(int id) async {
+    final db = await instance.database;
+    final maps = await db.query(
+      'schedules',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (maps.isNotEmpty) {
+      return maps.first;
+    }
+    return null;
+  }
+
+  // 更新
+  Future<int> updateSchedule(int id, Map<String, dynamic> schedule) async {
+    final db = await instance.database;
+
+    final data = {
+      'title': schedule['title'],
+      'date': DateTime(
+        schedule['date'].year,
+        schedule['date'].month,
+        schedule['date'].day,
+      ).toIso8601String(),
+      'is_all_day': schedule['isAllDay'] ? 1 : 0,
+      'start_time': schedule['startTime'] != null
+          ? '${schedule['startTime'].hour.toString().padLeft(2, '0')}:${schedule['startTime'].minute.toString().padLeft(2, '0')}'
+          : null,
+      'end_time': schedule['endTime'] != null
+          ? '${schedule['endTime'].hour.toString().padLeft(2, '0')}:${schedule['endTime'].minute.toString().padLeft(2, '0')}'
+          : null,
+      'meeting_type': schedule['meetingType'],
+      'url': schedule['url'],
+      'agent_id': schedule['agent'],
+      'end_company_id': schedule['endCompany'],
+      'memo': schedule['memo'],
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+
+    return await db.update(
+      'schedules',
+      data,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // 削除
+  Future<int> deleteSchedule(int id) async {
+    final db = await instance.database;
+    return await db.delete(
+      'schedules',
       where: 'id = ?',
       whereArgs: [id],
     );
