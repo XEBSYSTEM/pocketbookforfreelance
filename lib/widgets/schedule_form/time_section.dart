@@ -40,9 +40,15 @@ class TimeSection extends StatelessWidget {
               children: [
                 Expanded(
                   child: ListTile(
-                    title: Text(formData.startTime == null
-                        ? '開始時刻を選択'
-                        : '開始: ${_formatTimeOfDay(formData.startTime)}'),
+                    title: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        formData.startTime == null
+                            ? '開始時刻を選択'
+                            : '開始: ${_formatTimeOfDay(formData.startTime)}',
+                      ),
+                    ),
                     trailing: const Icon(Icons.access_time),
                     tileColor: Colors.grey[200],
                     shape: RoundedRectangleBorder(
@@ -54,9 +60,15 @@ class TimeSection extends StatelessWidget {
                 const SizedBox(width: 16),
                 Expanded(
                   child: ListTile(
-                    title: Text(formData.endTime == null
-                        ? '終了時刻を選択'
-                        : '終了: ${_formatTimeOfDay(formData.endTime)}'),
+                    title: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        formData.endTime == null
+                            ? '終了時刻を選択'
+                            : '終了: ${_formatTimeOfDay(formData.endTime)}',
+                      ),
+                    ),
                     trailing: const Icon(Icons.access_time),
                     tileColor: Colors.grey[200],
                     shape: RoundedRectangleBorder(
