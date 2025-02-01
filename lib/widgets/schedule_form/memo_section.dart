@@ -19,11 +19,11 @@ class MemoSection extends StatelessWidget {
       decoration: const InputDecoration(
         labelText: 'メモ',
         border: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.black, width: 1.0),
+          borderSide: BorderSide(color: Colors.red, width: 1.0),
         ),
         labelStyle: TextStyle(color: Colors.black),
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.black, width: 1.0),
+          borderSide: BorderSide(color: Colors.red, width: 1.0),
         ),
         enabledBorder: OutlineInputBorder(
           borderSide: BorderSide(color: Colors.black, width: 1.0),
