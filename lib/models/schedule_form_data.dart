@@ -41,18 +41,25 @@ class ScheduleFormData {
     );
   }
 
-  // フォームの出力用にMapに変換
+  // フォームの出力用にMapに変換（データベース保存用）
   Map<String, dynamic> toMap() {
     return {
       'title': title,
       'date': date,
       'isAllDay': isAllDay,
-      'startTime': startTime,
-      'endTime': endTime,
+      'startTime': startTime != null
+          ? '${startTime!.hour.toString().padLeft(2, '0')}:${startTime!.minute.toString().padLeft(2, '0')}'
+          : null,
+      'endTime': endTime != null
+          ? '${endTime!.hour.toString().padLeft(2, '0')}:${endTime!.minute.toString().padLeft(2, '0')}'
+          : null,
       'meetingType': meetingType,
       'url': url,
-      'agent': agentId,
-      'endCompany': endCompanyId,
+      'agent':
+          agentId != null && agentId!.isNotEmpty ? int.parse(agentId!) : null,
+      'endCompany': endCompanyId != null && endCompanyId!.isNotEmpty
+          ? int.parse(endCompanyId!)
+          : null,
       'memo': memo,
     };
   }
