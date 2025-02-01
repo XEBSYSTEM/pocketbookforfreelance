@@ -147,114 +147,111 @@ class _ScheduleFormState extends State<ScheduleForm> {
       appBar: AppBar(
         title: Text(widget.isEditing ? 'スケジュール編集' : 'スケジュール登録'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: Container(
+        color: Colors.white,
         child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                BasicInfoSection(
-                  formData: _formData,
-                  titleController: _titleController,
-                  onSelectDate: _selectDate,
-                ),
-                const SizedBox(height: 16),
-
-                TimeSection(
-                  formData: _formData,
-                  onAllDayChanged: (value) {
-                    setState(() {
-                      _formData.isAllDay = value ?? false;
-                      if (_formData.isAllDay) {
-                        _formData.startTime = null;
-                        _formData.endTime = null;
-                      }
-                    });
-                  },
-                  onSelectStartTime: () => _selectTime(true),
-                  onSelectEndTime: () => _selectTime(false),
-                ),
-                const SizedBox(height: 16),
-
-                MeetingTypeSection(
-                  formData: _formData,
-                  meetingTypes: _meetingTypes,
-                  onMeetingTypeChanged: (value) {
-                    setState(() {
-                      _formData.meetingType = value;
-                    });
-                  },
-                  urlController: _urlController,
-                ),
-                const SizedBox(height: 16),
-
-                CompanySection(
-                  formData: _formData,
-                  agents: _agents,
-                  endCompanies: _endCompanies,
-                  onAgentChanged: (value) {
-                    setState(() {
-                      _formData.agentId = value;
-                    });
-                  },
-                  onEndCompanyChanged: (value) {
-                    setState(() {
-                      _formData.endCompanyId = value;
-                    });
-                  },
-                  onAgentRegisterPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CompanyForm(
-                          title: 'エージェント登録',
-                          companyType: CompanyType.agent,
-                        ),
-                      ),
-                    ).then((_) => _loadCompanies());
-                  },
-                  onEndCompanyRegisterPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CompanyForm(
-                          title: 'エンド企業登録',
-                          companyType: CompanyType.end,
-                        ),
-                      ),
-                    ).then((_) => _loadCompanies());
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                MemoSection(
-                  formData: _formData,
-                  memoController: _memoController,
-                ),
-                const SizedBox(height: 24),
-
-                // 登録/更新ボタン
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate() &&
-                          _formData.date != null &&
-                          (_formData.isAllDay ||
-                              (_formData.startTime != null &&
-                                  _formData.endTime != null))) {
-                        _submitForm();
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: Text(widget.isEditing ? '更新' : '登録'),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  BasicInfoSection(
+                    formData: _formData,
+                    titleController: _titleController,
+                    onSelectDate: _selectDate,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  TimeSection(
+                    formData: _formData,
+                    onAllDayChanged: (value) {
+                      setState(() {
+                        _formData.isAllDay = value ?? false;
+                        if (_formData.isAllDay) {
+                          _formData.startTime = null;
+                          _formData.endTime = null;
+                        }
+                      });
+                    },
+                    onSelectStartTime: () => _selectTime(true),
+                    onSelectEndTime: () => _selectTime(false),
+                  ),
+                  const SizedBox(height: 16),
+                  MeetingTypeSection(
+                    formData: _formData,
+                    meetingTypes: _meetingTypes,
+                    onMeetingTypeChanged: (value) {
+                      setState(() {
+                        _formData.meetingType = value;
+                      });
+                    },
+                    urlController: _urlController,
+                  ),
+                  const SizedBox(height: 16),
+                  CompanySection(
+                    formData: _formData,
+                    agents: _agents,
+                    endCompanies: _endCompanies,
+                    onAgentChanged: (value) {
+                      setState(() {
+                        _formData.agentId = value;
+                      });
+                    },
+                    onEndCompanyChanged: (value) {
+                      setState(() {
+                        _formData.endCompanyId = value;
+                      });
+                    },
+                    onAgentRegisterPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CompanyForm(
+                            title: 'エージェント登録',
+                            companyType: CompanyType.agent,
+                          ),
+                        ),
+                      ).then((_) => _loadCompanies());
+                    },
+                    onEndCompanyRegisterPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CompanyForm(
+                            title: 'エンド企業登録',
+                            companyType: CompanyType.end,
+                          ),
+                        ),
+                      ).then((_) => _loadCompanies());
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  MemoSection(
+                    formData: _formData,
+                    memoController: _memoController,
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate() &&
+                            _formData.date != null &&
+                            (_formData.isAllDay ||
+                                (_formData.startTime != null &&
+                                    _formData.endTime != null))) {
+                          _submitForm();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: Text(widget.isEditing ? '更新' : '登録'),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
