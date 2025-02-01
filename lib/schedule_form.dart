@@ -1,4 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:pocketbookforfreelance/company_detail.dart';
+import 'package:pocketbookforfreelance/db/database_helper.dart';
+import 'package:pocketbookforfreelance/models/schedule_form_data.dart';
+import 'package:pocketbookforfreelance/widgets/schedule_form/basic_info_section.dart';
+import 'package:pocketbookforfreelance/widgets/schedule_form/time_section.dart';
+import 'package:pocketbookforfreelance/widgets/schedule_form/meeting_type_section.dart';
+import 'package:pocketbookforfreelance/widgets/schedule_form/company_section.dart';
+import 'package:pocketbookforfreelance/widgets/schedule_form/memo_section.dart';
 
 class ScheduleForm extends StatefulWidget {
   final DateTime? initialDate;
@@ -21,34 +29,56 @@ class _ScheduleFormState extends State<ScheduleForm> {
   final _titleController = TextEditingController();
   final _urlController = TextEditingController();
   final _memoController = TextEditingController();
-  DateTime? _selectedDate;
-  TimeOfDay? _startTime;
-  TimeOfDay? _endTime;
-  bool _isAllDay = false;
-  String? _meetingType;
-  String? _selectedAgent;
-  String? _selectedEndCompany;
-
-  // ダミーデータ
-  final List<String> _agents = ['', 'エージェントA', 'エージェントB'];
-  final List<String> _endCompanies = ['', 'エンドA', 'エンドB'];
+  late ScheduleFormData _formData;
   final List<String> _meetingTypes = ['', '対面', 'リモート'];
+  List<Map<String, dynamic>> _agents = [
+    {'id': '', 'company_name': '選択してください'}
+  ];
+  List<Map<String, dynamic>> _endCompanies = [
+    {'id': '', 'company_name': '選択してください'}
+  ];
+
+  Future<void> _loadCompanies() async {
+    try {
+      // エージェント企業を取得
+      final agentCompanies =
+          await DatabaseHelper.instance.readCompaniesByType(CompanyType.agent);
+      setState(() {
+        _agents = [
+          {'id': '', 'company_name': '選択してください'},
+          ...agentCompanies,
+        ];
+      });
+
+      // エンド企業を取得
+      final endCompanies =
+          await DatabaseHelper.instance.readCompaniesByType(CompanyType.end);
+      setState(() {
+        _endCompanies = [
+          {'id': '', 'company_name': '選択してください'},
+          ...endCompanies,
+        ];
+      });
+    } catch (e) {
+      print('企業データの取得に失敗しました: $e');
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _selectedDate = widget.initialDate;
+    _loadCompanies();
 
+    // フォームデータの初期化
     if (widget.initialData != null) {
-      _titleController.text = widget.initialData!['title'] ?? '';
-      _isAllDay = widget.initialData!['isAllDay'] ?? false;
-      _startTime = widget.initialData!['startTime'];
-      _endTime = widget.initialData!['endTime'];
-      _meetingType = widget.initialData!['meetingType'];
-      _urlController.text = widget.initialData!['url'] ?? '';
-      _selectedAgent = widget.initialData!['agent'];
-      _selectedEndCompany = widget.initialData!['endCompany'];
-      _memoController.text = widget.initialData!['memo'] ?? '';
+      _formData = ScheduleFormData.fromMap(widget.initialData!);
+      _titleController.text = _formData.title;
+      _urlController.text = _formData.url ?? '';
+      _memoController.text = _formData.memo ?? '';
+    } else {
+      _formData = ScheduleFormData(
+        date: widget.initialDate,
+      );
     }
   }
 
@@ -63,13 +93,13 @@ class _ScheduleFormState extends State<ScheduleForm> {
   Future<void> _selectDate() async {
     final pickedDate = await showDatePicker(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
+      initialDate: _formData.date ?? DateTime.now(),
       firstDate: DateTime(2024),
       lastDate: DateTime(2025, 12, 31),
     );
     if (pickedDate != null) {
       setState(() {
-        _selectedDate = pickedDate;
+        _formData.date = pickedDate;
       });
     }
   }
@@ -90,33 +120,20 @@ class _ScheduleFormState extends State<ScheduleForm> {
     if (pickedTime != null) {
       setState(() {
         if (isStart) {
-          _startTime = pickedTime;
+          _formData.startTime = pickedTime;
         } else {
-          _endTime = pickedTime;
+          _formData.endTime = pickedTime;
         }
       });
     }
   }
 
-  String _formatTimeOfDay(TimeOfDay? time) {
-    if (time == null) return '';
-    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-  }
-
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      Navigator.pop(context, {
-        'title': _titleController.text,
-        'date': _selectedDate,
-        'isAllDay': _isAllDay,
-        'startTime': _startTime,
-        'endTime': _endTime,
-        'meetingType': _meetingType,
-        'url': _urlController.text,
-        'agent': _selectedAgent,
-        'endCompany': _selectedEndCompany,
-        'memo': _memoController.text,
-      });
+      _formData.title = _titleController.text;
+      _formData.url = _urlController.text;
+      _formData.memo = _memoController.text;
+      Navigator.pop(context, _formData.toMap());
     }
   }
 
@@ -133,247 +150,61 @@ class _ScheduleFormState extends State<ScheduleForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // タイトル
-              TextFormField(
-                controller: _titleController,
-                style: const TextStyle(color: Colors.black),
-                decoration: const InputDecoration(
-                  labelText: 'タイトル *',
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
-                  ),
-                  labelStyle: TextStyle(color: Colors.black),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'タイトルを入力してください';
-                  }
-                  return null;
-                },
+              BasicInfoSection(
+                formData: _formData,
+                titleController: _titleController,
+                onSelectDate: _selectDate,
               ),
               const SizedBox(height: 16),
 
-              // 日付
-              ListTile(
-                title: Text(_selectedDate == null
-                    ? '日付を選択 *'
-                    : '日付: ${_selectedDate!.year}/${_selectedDate!.month}/${_selectedDate!.day}'),
-                trailing: const Icon(Icons.calendar_today),
-                tileColor: Colors.grey[200],
-                onTap: _selectDate,
-              ),
-              if (_selectedDate == null)
-                const Padding(
-                  padding: EdgeInsets.only(left: 12, top: 8),
-                  child: Text(
-                    '日付を選択してください',
-                    style: TextStyle(color: Colors.red, fontSize: 12),
-                  ),
-                ),
-              const SizedBox(height: 16),
-
-              // 終日チェックボックス
-              CheckboxListTile(
-                title: const Text('終日'),
-                value: _isAllDay,
-                onChanged: (bool? value) {
+              TimeSection(
+                formData: _formData,
+                onAllDayChanged: (value) {
                   setState(() {
-                    _isAllDay = value ?? false;
-                    if (_isAllDay) {
-                      _startTime = null;
-                      _endTime = null;
+                    _formData.isAllDay = value ?? false;
+                    if (_formData.isAllDay) {
+                      _formData.startTime = null;
+                      _formData.endTime = null;
                     }
                   });
                 },
+                onSelectStartTime: () => _selectTime(true),
+                onSelectEndTime: () => _selectTime(false),
               ),
               const SizedBox(height: 16),
 
-              // 開始時刻と終了時刻
-              if (!_isAllDay) ...[
-                Row(
-                  children: [
-                    Expanded(
-                      child: ListTile(
-                        title: Text(_startTime == null
-                            ? '開始時刻を選択'
-                            : '開始: ${_formatTimeOfDay(_startTime)}'),
-                        trailing: const Icon(Icons.access_time),
-                        tileColor: Colors.grey[200],
-                        onTap: () => _selectTime(true),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ListTile(
-                        title: Text(_endTime == null
-                            ? '終了時刻を選択'
-                            : '終了: ${_formatTimeOfDay(_endTime)}'),
-                        trailing: const Icon(Icons.access_time),
-                        tileColor: Colors.grey[200],
-                        onTap: () => _selectTime(false),
-                      ),
-                    ),
-                  ],
-                ),
-                if (!_isAllDay && _startTime == null && _endTime == null)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 12, top: 8),
-                    child: Text(
-                      '開始時刻と終了時刻を選択するか、終日にチェックを入れてください',
-                      style: TextStyle(color: Colors.red, fontSize: 12),
-                    ),
-                  ),
-              ],
+              MeetingTypeSection(
+                formData: _formData,
+                meetingTypes: _meetingTypes,
+                onMeetingTypeChanged: (value) {
+                  setState(() {
+                    _formData.meetingType = value;
+                  });
+                },
+                urlController: _urlController,
+              ),
               const SizedBox(height: 16),
 
-              // 種別（ドロップダウン）
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  labelText: '種別',
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                  labelStyle: TextStyle(color: Colors.black),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                ),
-                style: const TextStyle(color: Colors.black),
-                value: _meetingType,
-                items: _meetingTypes
-                    .map((type) => DropdownMenuItem(
-                          value: type,
-                          child: Text(
-                            type.isEmpty ? '選択してください' : type,
-                            style: const TextStyle(color: Colors.black),
-                          ),
-                        ))
-                    .toList(),
-                onChanged: (String? value) {
+              CompanySection(
+                formData: _formData,
+                agents: _agents,
+                endCompanies: _endCompanies,
+                onAgentChanged: (value) {
                   setState(() {
-                    _meetingType = value;
+                    _formData.agentId = value;
+                  });
+                },
+                onEndCompanyChanged: (value) {
+                  setState(() {
+                    _formData.endCompanyId = value;
                   });
                 },
               ),
               const SizedBox(height: 16),
 
-              // URL
-              TextFormField(
-                controller: _urlController,
-                style: const TextStyle(color: Colors.black),
-                decoration: const InputDecoration(
-                  labelText: 'URL',
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
-                  ),
-                  labelStyle: TextStyle(color: Colors.black),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // エージェント
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  labelText: 'エージェント',
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                  labelStyle: TextStyle(color: Colors.black),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                ),
-                style: const TextStyle(color: Colors.black),
-                value: _selectedAgent,
-                items: _agents
-                    .map((agent) => DropdownMenuItem(
-                          value: agent,
-                          child: Text(
-                            agent.isEmpty ? '選択してください' : agent,
-                            style: const TextStyle(color: Colors.black),
-                          ),
-                        ))
-                    .toList(),
-                onChanged: (String? value) {
-                  setState(() {
-                    _selectedAgent = value;
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // エンド企業
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  labelText: 'エンド企業',
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                  labelStyle: TextStyle(color: Colors.black),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                ),
-                style: const TextStyle(color: Colors.black),
-                value: _selectedEndCompany,
-                items: _endCompanies
-                    .map((company) => DropdownMenuItem(
-                          value: company,
-                          child: Text(
-                            company.isEmpty ? '選択してください' : company,
-                            style: const TextStyle(color: Colors.black),
-                          ),
-                        ))
-                    .toList(),
-                onChanged: (String? value) {
-                  setState(() {
-                    _selectedEndCompany = value;
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // メモ
-              TextFormField(
-                controller: _memoController,
-                style: const TextStyle(color: Colors.black),
-                decoration: const InputDecoration(
-                  labelText: 'メモ',
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.red, width: 1.0),
-                  ),
-                  labelStyle: TextStyle(color: Colors.black),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.red, width: 1.0),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
-                  ),
-                  alignLabelWithHint: true,
-                ),
-                maxLines: 5,
-                minLines: 3,
+              MemoSection(
+                formData: _formData,
+                memoController: _memoController,
               ),
               const SizedBox(height: 24),
 
@@ -383,9 +214,10 @@ class _ScheduleFormState extends State<ScheduleForm> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate() &&
-                        _selectedDate != null &&
-                        (_isAllDay ||
-                            (_startTime != null && _endTime != null))) {
+                        _formData.date != null &&
+                        (_formData.isAllDay ||
+                            (_formData.startTime != null &&
+                                _formData.endTime != null))) {
                       _submitForm();
                     }
                   },

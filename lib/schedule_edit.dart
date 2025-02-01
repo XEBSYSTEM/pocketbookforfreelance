@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'company_detail.dart';
+import 'db/database_helper.dart';
 
 class ScheduleEdit extends StatefulWidget {
   final Map<String, dynamic> initialData;
@@ -25,14 +27,31 @@ class _ScheduleEditState extends State<ScheduleEdit> {
   String? _selectedAgent;
   String? _selectedEndCompany;
 
-  // ダミーデータ
-  final List<String> _agents = ['', 'エージェントA', 'エージェントB'];
-  final List<String> _endCompanies = ['', 'エンドA', 'エンドB'];
+  // データリスト
+  List<Map<String, dynamic>> _agents = [];
+  List<Map<String, dynamic>> _endCompanies = [];
   final List<String> _meetingTypes = ['', '対面', 'リモート'];
+
+  Future<void> _loadCompanies() async {
+    try {
+      final agents =
+          await DatabaseHelper.instance.readCompaniesByType(CompanyType.agent);
+      final endCompanies =
+          await DatabaseHelper.instance.readCompaniesByType(CompanyType.end);
+
+      setState(() {
+        _agents = agents;
+        _endCompanies = endCompanies;
+      });
+    } catch (e) {
+      print('Error loading companies: $e');
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    _loadCompanies();
     _selectedDate = widget.initialData['date'];
     _titleController.text = widget.initialData['title'] ?? '';
     _isAllDay = widget.initialData['isAllDay'] ?? false;
@@ -296,15 +315,22 @@ class _ScheduleEditState extends State<ScheduleEdit> {
                 ),
                 style: const TextStyle(color: Colors.black),
                 value: _selectedAgent,
-                items: _agents
-                    .map((agent) => DropdownMenuItem(
-                          value: agent,
-                          child: Text(
-                            agent.isEmpty ? '選択してください' : agent,
-                            style: const TextStyle(color: Colors.black),
-                          ),
-                        ))
-                    .toList(),
+                items: [
+                  const DropdownMenuItem<String>(
+                    value: '',
+                    child: Text(
+                      '選択してください',
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  ),
+                  ..._agents.map((agent) => DropdownMenuItem<String>(
+                        value: agent['id'].toString(),
+                        child: Text(
+                          agent['company_name'],
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                      )),
+                ],
                 onChanged: (String? value) {
                   setState(() {
                     _selectedAgent = value;
@@ -330,15 +356,22 @@ class _ScheduleEditState extends State<ScheduleEdit> {
                 ),
                 style: const TextStyle(color: Colors.black),
                 value: _selectedEndCompany,
-                items: _endCompanies
-                    .map((company) => DropdownMenuItem(
-                          value: company,
-                          child: Text(
-                            company.isEmpty ? '選択してください' : company,
-                            style: const TextStyle(color: Colors.black),
-                          ),
-                        ))
-                    .toList(),
+                items: [
+                  const DropdownMenuItem<String>(
+                    value: '',
+                    child: Text(
+                      '選択してください',
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  ),
+                  ..._endCompanies.map((company) => DropdownMenuItem<String>(
+                        value: company['id'].toString(),
+                        child: Text(
+                          company['company_name'],
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                      )),
+                ],
                 onChanged: (String? value) {
                   setState(() {
                     _selectedEndCompany = value;
