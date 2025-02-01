@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'tabs/company_list_tab.dart';
 import 'tabs/schedule_tab.dart';
+import 'tabs/memo_tab.dart';
 import 'db/database_helper.dart';
 
 void main() async {
@@ -57,7 +58,7 @@ class MyHomePage extends StatelessWidget {
             tabs: [
               Tab(icon: Icon(Icons.calendar_today), text: 'スケジュール'),
               Tab(icon: Icon(Icons.business), text: '企業一覧'),
-              Tab(icon: Icon(Icons.school), text: '学習'),
+              Tab(icon: Icon(Icons.edit), text: 'メモ'),
             ],
           ),
         ),
@@ -65,7 +66,7 @@ class MyHomePage extends StatelessWidget {
           children: [
             const ScheduleTab(),
             CompanyListTab(),
-            const Center(child: Text('学習画面')),
+            const MemoTab(),
           ],
         ),
       ),

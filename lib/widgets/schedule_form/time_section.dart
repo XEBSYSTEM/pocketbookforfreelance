@@ -50,7 +50,7 @@ class TimeSection extends StatelessWidget {
                       ),
                     ),
                     trailing: const Icon(Icons.access_time),
-                    tileColor: Colors.grey[200],
+                    tileColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(4),
                     ),
@@ -70,7 +70,7 @@ class TimeSection extends StatelessWidget {
                       ),
                     ),
                     trailing: const Icon(Icons.access_time),
-                    tileColor: Colors.grey[200],
+                    tileColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(4),
                     ),

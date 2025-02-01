@@ -148,7 +148,6 @@ class _ScheduleFormState extends State<ScheduleForm> {
         title: Text(widget.isEditing ? 'スケジュール編集' : 'スケジュール登録'),
       ),
       body: Container(
-        color: Colors.white,
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(16.0),

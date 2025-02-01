@@ -220,7 +220,7 @@ class _ScheduleEditState extends State<ScheduleEdit> {
                     ? '日付を選択 *'
                     : '日付: ${_selectedDate!.year}/${_selectedDate!.month}/${_selectedDate!.day}'),
                 trailing: const Icon(Icons.calendar_today),
-                tileColor: Colors.grey[200],
+                tileColor: Colors.white,
                 onTap: _selectDate,
               ),
               if (_selectedDate == null)
@@ -259,7 +259,7 @@ class _ScheduleEditState extends State<ScheduleEdit> {
                             ? '開始時刻を選択'
                             : '開始: ${_formatTimeOfDay(_startTime)}'),
                         trailing: const Icon(Icons.access_time),
-                        tileColor: Colors.grey[200],
+                        tileColor: Colors.white,
                         onTap: () => _selectTime(true),
                       ),
                     ),
@@ -270,7 +270,7 @@ class _ScheduleEditState extends State<ScheduleEdit> {
                             ? '終了時刻を選択'
                             : '終了: ${_formatTimeOfDay(_endTime)}'),
                         trailing: const Icon(Icons.access_time),
-                        tileColor: Colors.grey[200],
+                        tileColor: Colors.white,
                         onTap: () => _selectTime(false),
                       ),
                     ),

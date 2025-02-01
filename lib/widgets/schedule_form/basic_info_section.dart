@@ -47,7 +47,7 @@ class BasicInfoSection extends StatelessWidget {
               ? '日付を選択 *'
               : '日付: ${formData.date!.year}/${formData.date!.month}/${formData.date!.day}'),
           trailing: const Icon(Icons.calendar_today),
-          tileColor: Colors.grey[200],
+          tileColor: Colors.white,
           onTap: onSelectDate,
         ),
         if (formData.date == null)
