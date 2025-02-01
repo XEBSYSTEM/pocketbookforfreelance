@@ -14,14 +14,18 @@ class ScheduleTab extends StatefulWidget {
 
 class _ScheduleTabState extends State<ScheduleTab> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
-  DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
+  late DateTime _focusedDay;
+  late DateTime _selectedDay;
   Map<DateTime, List<Map<String, dynamic>>> _events = {};
 
   @override
   void initState() {
     super.initState();
-    _loadSchedules();
+    _focusedDay = DateTime.now();
+    _selectedDay = _focusedDay;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadSchedules();
+    });
   }
 
   Future<void> _loadSchedules() async {
@@ -211,12 +215,8 @@ class _ScheduleTabState extends State<ScheduleTab> {
   }
 
   Widget _buildEventsList() {
-    if (_selectedDay == null) {
-      return const Center(child: Text('日付を選択してください'));
-    }
-
     final events = _events[DateTime(
-            _selectedDay!.year, _selectedDay!.month, _selectedDay!.day)] ??
+            _selectedDay.year, _selectedDay.month, _selectedDay.day)] ??
         [];
     if (events.isEmpty) {
       return const Center(child: Text('予定はありません'));
