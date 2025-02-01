@@ -35,6 +35,9 @@ class BasicInfoSection extends StatelessWidget {
             ),
           ),
           validator: (_) => formData.validateTitle(),
+          onChanged: (value) {
+            formData.title = value;
+          },
         ),
         const SizedBox(height: 16),
 
