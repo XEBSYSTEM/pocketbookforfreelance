@@ -119,15 +119,12 @@ class _ScheduleTabState extends State<ScheduleTab> {
   }
 
   Future<void> _editSchedule(int index) async {
-    if (_selectedDay == null) return;
-
-    final events = _getEventsForDay(_selectedDay!);
+    final events = _getEventsForDay(_selectedDay);
     if (index >= events.length) return;
 
     final event = events[index];
     final scheduleId = _events[DateTime(
-            _selectedDay!.year, _selectedDay!.month, _selectedDay!.day)]![index]
-        ['id'];
+        _selectedDay.year, _selectedDay.month, _selectedDay.day)]![index]['id'];
 
     if (!mounted) return;
 
@@ -162,11 +159,9 @@ class _ScheduleTabState extends State<ScheduleTab> {
 
   Future<void> _deleteSchedule(int index) async {
     final scheduleId = _events[DateTime(
-            _selectedDay!.year, _selectedDay!.month, _selectedDay!.day)]![index]
-        ['id'];
-    if (_selectedDay == null) return;
+        _selectedDay.year, _selectedDay.month, _selectedDay.day)]![index]['id'];
 
-    final events = _getEventsForDay(_selectedDay!);
+    final events = _getEventsForDay(_selectedDay);
     if (index >= events.length) return;
 
     final event = events[index];
