@@ -85,22 +85,31 @@ class _ScheduleTabState extends State<ScheduleTab> {
   }
 
   Future<void> _addSchedule() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ScheduleForm(
-          initialDate: _selectedDay ?? _focusedDay,
-        ),
-      ),
-    );
+    if (!mounted) return;
 
-    if (result != null && mounted) {
-      try {
+    try {
+      final result = await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => ScheduleForm(
+            initialDate: _selectedDay ?? _focusedDay,
+          ),
+        ),
+      );
+
+      if (result != null && mounted) {
         await DatabaseHelper.instance
             .createSchedule(result as Map<String, dynamic>);
-        _loadSchedules();
-      } catch (e) {
-        print('Error creating schedule: $e');
+        await _loadSchedules();
+      }
+    } catch (e) {
+      print('Error creating schedule: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('スケジュールの作成に失敗しました'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -116,21 +125,34 @@ class _ScheduleTabState extends State<ScheduleTab> {
             _selectedDay!.year, _selectedDay!.month, _selectedDay!.day)]![index]
         ['id'];
 
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ScheduleEdit(
-          initialData: {
-            ...event,
-            'date': _selectedDay,
-          },
-          scheduleId: scheduleId,
-        ),
-      ),
-    );
+    if (!mounted) return;
 
-    if (result == true && mounted) {
-      await _loadSchedules();
+    try {
+      final result = await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => ScheduleEdit(
+            initialData: {
+              ...event,
+              'date': _selectedDay,
+            },
+            scheduleId: scheduleId,
+          ),
+        ),
+      );
+
+      if (result == true && mounted) {
+        await _loadSchedules();
+      }
+    } catch (e) {
+      print('Error editing schedule: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('スケジュールの編集に失敗しました'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -144,8 +166,11 @@ class _ScheduleTabState extends State<ScheduleTab> {
     if (index >= events.length) return;
 
     final event = events[index];
+    if (!mounted) return;
+
     final confirmed = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('スケジュールの削除'),
         content: Text('「${event['title']}」を削除してもよろしいですか？'),
@@ -210,30 +235,44 @@ class _ScheduleTabState extends State<ScheduleTab> {
               style: const TextStyle(fontSize: 16),
             ),
             onTap: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ScheduleDetail(
-                    scheduleData: {
-                      ...event,
-                      'date': _selectedDay,
-                    },
-                  ),
-                ),
-              );
+              if (!mounted) return;
 
-              if (result != null && mounted) {
-                if (result['action'] == 'delete' ||
-                    result['action'] == 'edited') {
-                  try {
-                    if (result['action'] == 'delete') {
-                      final scheduleId = events[index]['id'];
-                      await DatabaseHelper.instance.deleteSchedule(scheduleId);
+              try {
+                final result = await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => ScheduleDetail(
+                      scheduleData: {
+                        ...event,
+                        'date': _selectedDay,
+                      },
+                    ),
+                  ),
+                );
+
+                if (result != null && mounted) {
+                  if (result['action'] == 'delete' ||
+                      result['action'] == 'edited') {
+                    try {
+                      if (result['action'] == 'delete') {
+                        final scheduleId = events[index]['id'];
+                        await DatabaseHelper.instance
+                            .deleteSchedule(scheduleId);
+                      }
+                      await _loadSchedules();
+                    } catch (e) {
+                      print('Error processing schedule action: $e');
                     }
-                    await _loadSchedules();
-                  } catch (e) {
-                    print('Error processing schedule action: $e');
                   }
+                }
+              } catch (e) {
+                print('Error navigating to schedule detail: $e');
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('スケジュールの詳細表示に失敗しました'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
                 }
               }
             },
