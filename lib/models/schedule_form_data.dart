@@ -25,18 +25,39 @@ class ScheduleFormData {
     this.memo = '',
   });
 
+  // 文字列からTimeOfDayを作成するヘルパーメソッド
+  static TimeOfDay? _parseTimeString(String? timeStr) {
+    if (timeStr == null || timeStr.isEmpty) return null;
+
+    final parts = timeStr.split(':');
+    if (parts.length != 2) return null;
+
+    try {
+      final hour = int.parse(parts[0]);
+      final minute = int.parse(parts[1]);
+      if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+
+      return TimeOfDay(hour: hour, minute: minute);
+    } catch (e) {
+      return null;
+    }
+  }
+
   // 入力データからインスタンスを作成
   factory ScheduleFormData.fromMap(Map<String, dynamic> data) {
+    String? startTimeStr = data['startTime']?.toString();
+    String? endTimeStr = data['endTime']?.toString();
+
     return ScheduleFormData(
       title: data['title'] ?? '',
       date: data['date'],
       isAllDay: data['isAllDay'] ?? false,
-      startTime: data['startTime'],
-      endTime: data['endTime'],
+      startTime: _parseTimeString(startTimeStr),
+      endTime: _parseTimeString(endTimeStr),
       meetingType: data['meetingType'],
       url: data['url'] ?? '',
-      agentId: data['agent'],
-      endCompanyId: data['endCompany'],
+      agentId: data['agent']?.toString(),
+      endCompanyId: data['endCompany']?.toString(),
       memo: data['memo'] ?? '',
     );
   }
