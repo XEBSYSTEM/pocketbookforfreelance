@@ -392,16 +392,8 @@ class _AgentEditState extends State<AgentEdit> {
     await DatabaseHelper.instance.updateCompany(widget.agentId, data);
   }
 
-  // 詳細画面に遷移
+  // 詳細画面に戻る
   void _navigateToDetail(Map<String, dynamic> data) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CompanyDetail(
-          companyId: widget.agentId,
-          companyType: _companyType,
-        ),
-      ),
-    );
+    Navigator.pop(context);
   }
 }
