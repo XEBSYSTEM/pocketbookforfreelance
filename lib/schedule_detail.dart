@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'schedule_edit.dart';
+import 'db/database_helper.dart';
+import 'db/company_repository.dart';
 
-class ScheduleDetail extends StatelessWidget {
+class ScheduleDetail extends StatefulWidget {
   final Map<String, dynamic> scheduleData;
 
   const ScheduleDetail({
@@ -9,6 +11,11 @@ class ScheduleDetail extends StatelessWidget {
     required this.scheduleData,
   });
 
+  @override
+  State<ScheduleDetail> createState() => _ScheduleDetailState();
+}
+
+class _ScheduleDetailState extends State<ScheduleDetail> {
   String _formatTimeOfDay(TimeOfDay? time) {
     if (time == null) return '';
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
@@ -41,12 +48,46 @@ class ScheduleDetail extends StatelessWidget {
     );
   }
 
+  late Future<Map<String, String>> _companyNamesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _companyNamesFuture = _loadCompanyNames();
+  }
+
+  Future<Map<String, String>> _loadCompanyNames() async {
+    final db = await DatabaseHelper.instance.database;
+    final companyRepo = CompanyRepository(db);
+    final Map<String, String> names = {};
+
+    // エージェントの企業名を取得
+    if (widget.scheduleData['agent'] != null) {
+      final agentCompany = await companyRepo
+          .readCompany(int.parse(widget.scheduleData['agent']));
+      if (agentCompany != null) {
+        names['agent'] = agentCompany['company_name'];
+      }
+    }
+
+    // エンド企業の企業名を取得
+    if (widget.scheduleData['endCompany'] != null) {
+      final endCompany = await companyRepo
+          .readCompany(int.parse(widget.scheduleData['endCompany']));
+      if (endCompany != null) {
+        names['endCompany'] = endCompany['company_name'];
+      }
+    }
+
+    return names;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final date = scheduleData['date'] as DateTime?;
-    final startTime = scheduleData['startTime'] as TimeOfDay?;
-    final endTime = scheduleData['endTime'] as TimeOfDay?;
-    final isAllDay = scheduleData['isAllDay'] as bool? ?? false;
+    final date = widget.scheduleData['date'] as DateTime?;
+    final startTime = widget.scheduleData['startTime'] as TimeOfDay?;
+    final endTime = widget.scheduleData['endTime'] as TimeOfDay?;
+    final isAllDay = widget.scheduleData['isAllDay'] as bool? ?? false;
 
     String dateStr =
         date == null ? '未設定' : '${date.year}/${date.month}/${date.day}';
@@ -67,16 +108,33 @@ class ScheduleDetail extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildInfoTile('タイトル', scheduleData['title'] ?? ''),
+                  _buildInfoTile('タイトル', widget.scheduleData['title'] ?? ''),
                   _buildInfoTile('日付', dateStr),
                   _buildInfoTile('時間', timeStr),
-                  _buildInfoTile('種別', scheduleData['meetingType'] ?? ''),
-                  if (scheduleData['url']?.isNotEmpty ?? false)
-                    _buildInfoTile('URL', scheduleData['url'] ?? ''),
-                  _buildInfoTile('エージェント', scheduleData['agent'] ?? ''),
-                  _buildInfoTile('エンド企業', scheduleData['endCompany'] ?? ''),
-                  if (scheduleData['memo']?.isNotEmpty ?? false)
-                    _buildInfoTile('メモ', scheduleData['memo'] ?? ''),
+                  _buildInfoTile(
+                      '種別', widget.scheduleData['meetingType'] ?? ''),
+                  if (widget.scheduleData['url']?.isNotEmpty ?? false)
+                    _buildInfoTile('URL', widget.scheduleData['url'] ?? ''),
+                  FutureBuilder<Map<String, String>>(
+                    future: _companyNamesFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        final names = snapshot.data!;
+                        return Column(
+                          children: [
+                            _buildInfoTile('エージェント', names['agent'] ?? '未設定'),
+                            _buildInfoTile(
+                                'エンド企業', names['endCompany'] ?? '未設定'),
+                          ],
+                        );
+                      } else if (snapshot.hasError) {
+                        return Text('エラーが発生しました: ${snapshot.error}');
+                      }
+                      return const CircularProgressIndicator();
+                    },
+                  ),
+                  if (widget.scheduleData['memo']?.isNotEmpty ?? false)
+                    _buildInfoTile('メモ', widget.scheduleData['memo'] ?? ''),
                 ],
               ),
             ),
@@ -92,8 +150,8 @@ class ScheduleDetail extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => ScheduleEdit(
-                          initialData: scheduleData,
-                          scheduleId: scheduleData['id'],
+                          initialData: widget.scheduleData,
+                          scheduleId: widget.scheduleData['id'],
                         ),
                       ),
                     );
@@ -114,8 +172,8 @@ class ScheduleDetail extends StatelessWidget {
                       context: context,
                       builder: (context) => AlertDialog(
                         title: const Text('スケジュールの削除'),
-                        content:
-                            Text('「${scheduleData['title']}」を削除してもよろしいですか？'),
+                        content: Text(
+                            '「${widget.scheduleData['title']}」を削除してもよろしいですか？'),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
