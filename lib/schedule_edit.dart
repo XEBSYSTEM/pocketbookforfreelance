@@ -27,8 +27,8 @@ class _ScheduleEditState extends State<ScheduleEdit> {
   TimeOfDay? _endTime;
   bool _isAllDay = false;
   String? _meetingType;
-  String? _selectedAgent;
-  String? _selectedEndCompany;
+  int? _selectedAgent;
+  int? _selectedEndCompany;
 
   // データリスト
   List<Map<String, dynamic>> _agents = [];
@@ -58,12 +58,29 @@ class _ScheduleEditState extends State<ScheduleEdit> {
     _selectedDate = widget.initialData['date'];
     _titleController.text = widget.initialData['title'] ?? '';
     _isAllDay = widget.initialData['isAllDay'] ?? false;
-    _startTime = widget.initialData['startTime'];
-    _endTime = widget.initialData['endTime'];
+    _startTime = widget.initialData['startTime'] is String
+        ? TimeOfDay(
+            hour: int.parse(widget.initialData['startTime'].split(':')[0]),
+            minute: int.parse(widget.initialData['startTime'].split(':')[1]))
+        : widget.initialData['startTime'];
+    _endTime = widget.initialData['endTime'] is String
+        ? TimeOfDay(
+            hour: int.parse(widget.initialData['endTime'].split(':')[0]),
+            minute: int.parse(widget.initialData['endTime'].split(':')[1]))
+        : widget.initialData['endTime'];
     _meetingType = widget.initialData['meetingType'];
     _urlController.text = widget.initialData['url'] ?? '';
-    _selectedAgent = widget.initialData['agent'];
-    _selectedEndCompany = widget.initialData['endCompany'];
+    // 数値型の場合はそのまま使用し、文字列の場合は変換する
+    _selectedAgent = widget.initialData['agent'] != null
+        ? (widget.initialData['agent'] is int
+            ? widget.initialData['agent']
+            : int.parse(widget.initialData['agent'].toString()))
+        : null;
+    _selectedEndCompany = widget.initialData['endCompany'] != null
+        ? (widget.initialData['endCompany'] is int
+            ? widget.initialData['endCompany']
+            : int.parse(widget.initialData['endCompany'].toString()))
+        : null;
     _memoController.text = widget.initialData['memo'] ?? '';
   }
 
@@ -324,7 +341,7 @@ class _ScheduleEditState extends State<ScheduleEdit> {
               const SizedBox(height: 16),
 
               // エージェント
-              DropdownButtonFormField<String>(
+              DropdownButtonFormField<int>(
                 decoration: const InputDecoration(
                   labelText: 'エージェント',
                   border: OutlineInputBorder(
@@ -339,24 +356,27 @@ class _ScheduleEditState extends State<ScheduleEdit> {
                   ),
                 ),
                 style: const TextStyle(color: Colors.black),
-                value: _selectedAgent,
+                value: _selectedAgent != null &&
+                        _agents.any((a) => a['id'] == _selectedAgent)
+                    ? _selectedAgent
+                    : null,
                 items: [
-                  const DropdownMenuItem<String>(
-                    value: '',
+                  const DropdownMenuItem<int>(
+                    value: null,
                     child: Text(
                       '選択してください',
                       style: TextStyle(color: Colors.black),
                     ),
                   ),
-                  ..._agents.map((agent) => DropdownMenuItem<String>(
-                        value: agent['id'].toString(),
+                  ..._agents.map((agent) => DropdownMenuItem<int>(
+                        value: agent['id'],
                         child: Text(
                           agent['company_name'],
                           style: const TextStyle(color: Colors.black),
                         ),
                       )),
                 ],
-                onChanged: (String? value) {
+                onChanged: (int? value) {
                   setState(() {
                     _selectedAgent = value;
                   });
@@ -365,7 +385,7 @@ class _ScheduleEditState extends State<ScheduleEdit> {
               const SizedBox(height: 16),
 
               // エンド企業
-              DropdownButtonFormField<String>(
+              DropdownButtonFormField<int>(
                 decoration: const InputDecoration(
                   labelText: 'エンド企業',
                   border: OutlineInputBorder(
@@ -380,24 +400,27 @@ class _ScheduleEditState extends State<ScheduleEdit> {
                   ),
                 ),
                 style: const TextStyle(color: Colors.black),
-                value: _selectedEndCompany,
+                value: _selectedEndCompany != null &&
+                        _endCompanies.any((c) => c['id'] == _selectedEndCompany)
+                    ? _selectedEndCompany
+                    : null,
                 items: [
-                  const DropdownMenuItem<String>(
-                    value: '',
+                  const DropdownMenuItem<int>(
+                    value: null,
                     child: Text(
                       '選択してください',
                       style: TextStyle(color: Colors.black),
                     ),
                   ),
-                  ..._endCompanies.map((company) => DropdownMenuItem<String>(
-                        value: company['id'].toString(),
+                  ..._endCompanies.map((company) => DropdownMenuItem<int>(
+                        value: company['id'],
                         child: Text(
                           company['company_name'],
                           style: const TextStyle(color: Colors.black),
                         ),
                       )),
                 ],
-                onChanged: (String? value) {
+                onChanged: (int? value) {
                   setState(() {
                     _selectedEndCompany = value;
                   });
