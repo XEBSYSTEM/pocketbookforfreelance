@@ -27,120 +27,122 @@ class CompanySection extends StatelessWidget {
       builder: (context, constraints) => Column(
         children: [
           // エージェント
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'エージェント',
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.black),
+          IntrinsicHeight(
+            child: Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(
+                      labelText: 'エージェント',
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.black),
+                      ),
+                      labelStyle: TextStyle(color: Colors.black),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.black),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.black),
+                      ),
+                      isDense: true,
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                     ),
-                    labelStyle: TextStyle(color: Colors.black),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.black),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.black),
-                    ),
-                    isDense: true,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                  ),
-                  style: const TextStyle(color: Colors.black),
-                  value: formData.agentId,
-                  items: agents
-                      .map((agent) => DropdownMenuItem(
-                            value: agent['id'].toString(),
-                            child: Text(
-                              agent['company_name'],
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 13,
+                    style: const TextStyle(color: Colors.black),
+                    value: formData.agentId,
+                    items: agents
+                        .map((agent) => DropdownMenuItem(
+                              value: agent['id'].toString(),
+                              child: Text(
+                                agent['company_name'],
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 13,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ))
-                      .toList(),
-                  onChanged: onAgentChanged,
-                  isExpanded: true,
-                ),
-              ),
-              const SizedBox(width: 8),
-              SizedBox(
-                width: 60,
-                child: ElevatedButton(
-                  onPressed: onAgentRegisterPressed,
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                  ),
-                  child: const Text(
-                    '登録',
-                    style: TextStyle(fontSize: 11),
+                            ))
+                        .toList(),
+                    onChanged: onAgentChanged,
+                    isExpanded: true,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 60,
+                  child: ElevatedButton(
+                    onPressed: onAgentRegisterPressed,
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                    ),
+                    child: const Text(
+                      '登録',
+                      style: TextStyle(fontSize: 11),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
 
           // エンド企業
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'エンド企業',
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.black),
+          IntrinsicHeight(
+            child: Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(
+                      labelText: 'エンド企業',
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.black),
+                      ),
+                      labelStyle: TextStyle(color: Colors.black),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.black),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.black),
+                      ),
+                      isDense: true,
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                     ),
-                    labelStyle: TextStyle(color: Colors.black),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.black),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.black),
-                    ),
-                    isDense: true,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                  ),
-                  style: const TextStyle(color: Colors.black),
-                  value: formData.endCompanyId,
-                  items: endCompanies
-                      .map((company) => DropdownMenuItem(
-                            value: company['id'].toString(),
-                            child: Text(
-                              company['company_name'],
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 13,
+                    style: const TextStyle(color: Colors.black),
+                    value: formData.endCompanyId,
+                    items: endCompanies
+                        .map((company) => DropdownMenuItem(
+                              value: company['id'].toString(),
+                              child: Text(
+                                company['company_name'],
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 13,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ))
-                      .toList(),
-                  onChanged: onEndCompanyChanged,
-                  isExpanded: true,
-                ),
-              ),
-              const SizedBox(width: 8),
-              SizedBox(
-                width: 60,
-                child: ElevatedButton(
-                  onPressed: onEndCompanyRegisterPressed,
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                  ),
-                  child: const Text(
-                    '登録',
-                    style: TextStyle(fontSize: 11),
+                            ))
+                        .toList(),
+                    onChanged: onEndCompanyChanged,
+                    isExpanded: true,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 60,
+                  child: ElevatedButton(
+                    onPressed: onEndCompanyRegisterPressed,
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                    ),
+                    child: const Text(
+                      '登録',
+                      style: TextStyle(fontSize: 11),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

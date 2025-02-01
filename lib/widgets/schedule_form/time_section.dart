@@ -34,30 +34,39 @@ class TimeSection extends StatelessWidget {
 
         // 開始時刻と終了時刻
         if (!formData.isAllDay) ...[
-          Row(
-            children: [
-              Expanded(
-                child: ListTile(
-                  title: Text(formData.startTime == null
-                      ? '開始時刻を選択'
-                      : '開始: ${_formatTimeOfDay(formData.startTime)}'),
-                  trailing: const Icon(Icons.access_time),
-                  tileColor: Colors.grey[200],
-                  onTap: onSelectStartTime,
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: ListTile(
+                    title: Text(formData.startTime == null
+                        ? '開始時刻を選択'
+                        : '開始: ${_formatTimeOfDay(formData.startTime)}'),
+                    trailing: const Icon(Icons.access_time),
+                    tileColor: Colors.grey[200],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    onTap: onSelectStartTime,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ListTile(
-                  title: Text(formData.endTime == null
-                      ? '終了時刻を選択'
-                      : '終了: ${_formatTimeOfDay(formData.endTime)}'),
-                  trailing: const Icon(Icons.access_time),
-                  tileColor: Colors.grey[200],
-                  onTap: onSelectEndTime,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ListTile(
+                    title: Text(formData.endTime == null
+                        ? '終了時刻を選択'
+                        : '終了: ${_formatTimeOfDay(formData.endTime)}'),
+                    trailing: const Icon(Icons.access_time),
+                    tileColor: Colors.grey[200],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    onTap: onSelectEndTime,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           if (!formData.isAllDay &&
               formData.startTime == null &&
