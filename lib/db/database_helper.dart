@@ -70,17 +70,24 @@ class DatabaseHelper {
       )
     ''');
 
-    // スケジュールテーブル（company_idの参照先をcompaniesテーブルに変更）
+    // スケジュールテーブル
     await db.execute('''
       CREATE TABLE schedules (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
-        description TEXT,
         date DATETIME NOT NULL,
-        company_id INTEGER,
+        is_all_day BOOLEAN NOT NULL DEFAULT 0,
+        start_time TEXT,
+        end_time TEXT,
+        meeting_type TEXT,
+        url TEXT,
+        agent_id INTEGER,
+        end_company_id INTEGER,
+        memo TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (company_id) REFERENCES companies (id)
+        FOREIGN KEY (agent_id) REFERENCES companies (id),
+        FOREIGN KEY (end_company_id) REFERENCES companies (id)
       )
     ''');
   }
