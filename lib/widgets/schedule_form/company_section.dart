@@ -7,6 +7,8 @@ class CompanySection extends StatelessWidget {
   final List<Map<String, dynamic>> endCompanies;
   final ValueChanged<String?> onAgentChanged;
   final ValueChanged<String?> onEndCompanyChanged;
+  final VoidCallback onAgentRegisterPressed;
+  final VoidCallback onEndCompanyRegisterPressed;
 
   const CompanySection({
     super.key,
@@ -15,6 +17,8 @@ class CompanySection extends StatelessWidget {
     required this.endCompanies,
     required this.onAgentChanged,
     required this.onEndCompanyChanged,
+    required this.onAgentRegisterPressed,
+    required this.onEndCompanyRegisterPressed,
   });
 
   @override
@@ -22,62 +26,84 @@ class CompanySection extends StatelessWidget {
     return Column(
       children: [
         // エージェント
-        DropdownButtonFormField<String>(
-          decoration: const InputDecoration(
-            labelText: 'エージェント',
-            border: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.black),
+        Row(
+          children: [
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                decoration: const InputDecoration(
+                  labelText: 'エージェント',
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  labelStyle: TextStyle(color: Colors.black),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                ),
+                style: const TextStyle(color: Colors.black),
+                value: formData.agentId,
+                items: agents
+                    .map((agent) => DropdownMenuItem(
+                          value: agent['id'].toString(),
+                          child: Text(
+                            agent['company_name'],
+                            style: const TextStyle(color: Colors.black),
+                          ),
+                        ))
+                    .toList(),
+                onChanged: onAgentChanged,
+              ),
             ),
-            labelStyle: TextStyle(color: Colors.black),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.black),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: onAgentRegisterPressed,
+              child: const Text('エージェント登録'),
             ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.black),
-            ),
-          ),
-          style: const TextStyle(color: Colors.black),
-          value: formData.agentId,
-          items: agents
-              .map((agent) => DropdownMenuItem(
-                    value: agent['id'].toString(),
-                    child: Text(
-                      agent['company_name'],
-                      style: const TextStyle(color: Colors.black),
-                    ),
-                  ))
-              .toList(),
-          onChanged: onAgentChanged,
+          ],
         ),
         const SizedBox(height: 16),
 
         // エンド企業
-        DropdownButtonFormField<String>(
-          decoration: const InputDecoration(
-            labelText: 'エンド企業',
-            border: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.black),
+        Row(
+          children: [
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                decoration: const InputDecoration(
+                  labelText: 'エンド企業',
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  labelStyle: TextStyle(color: Colors.black),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                ),
+                style: const TextStyle(color: Colors.black),
+                value: formData.endCompanyId,
+                items: endCompanies
+                    .map((company) => DropdownMenuItem(
+                          value: company['id'].toString(),
+                          child: Text(
+                            company['company_name'],
+                            style: const TextStyle(color: Colors.black),
+                          ),
+                        ))
+                    .toList(),
+                onChanged: onEndCompanyChanged,
+              ),
             ),
-            labelStyle: TextStyle(color: Colors.black),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.black),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: onEndCompanyRegisterPressed,
+              child: const Text('エンド企業登録'),
             ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.black),
-            ),
-          ),
-          style: const TextStyle(color: Colors.black),
-          value: formData.endCompanyId,
-          items: endCompanies
-              .map((company) => DropdownMenuItem(
-                    value: company['id'].toString(),
-                    child: Text(
-                      company['company_name'],
-                      style: const TextStyle(color: Colors.black),
-                    ),
-                  ))
-              .toList(),
-          onChanged: onEndCompanyChanged,
+          ],
         ),
       ],
     );
