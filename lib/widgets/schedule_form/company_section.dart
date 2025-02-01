@@ -58,9 +58,15 @@ class CompanySection extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            ElevatedButton(
-              onPressed: onAgentRegisterPressed,
-              child: const Text('エージェント登録'),
+            SizedBox(
+              width: 80,
+              child: ElevatedButton(
+                onPressed: onAgentRegisterPressed,
+                child: const Text(
+                  '登録',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ),
             ),
           ],
         ),
@@ -99,9 +105,15 @@ class CompanySection extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            ElevatedButton(
-              onPressed: onEndCompanyRegisterPressed,
-              child: const Text('エンド企業登録'),
+            SizedBox(
+              width: 80,
+              child: ElevatedButton(
+                onPressed: onEndCompanyRegisterPressed,
+                child: const Text(
+                  '登録',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ),
             ),
           ],
         ),
