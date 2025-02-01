@@ -31,12 +31,10 @@ class DatabaseHelper {
     final path = join(dbPath, filePath);
     print('Full Database Path: $path');
 
-    // ファイルの存在確認
+    // ファイルの存在確認とログ出力
     final file = File(path);
     if (file.existsSync()) {
       print('Database file exists at: $path');
-      await file.delete();
-      print('Existing database file deleted');
     }
 
     // ディレクトリが存在することを確認
