@@ -78,7 +78,10 @@ class _ScheduleFormState extends State<ScheduleForm> {
       _memoController.text = _formData.memo ?? '';
     } else {
       _formData = ScheduleFormData(
-        date: widget.initialDate,
+        date: widget.initialDate ?? DateTime.now(),
+        title: '',
+        isAllDay: false,
+        meetingType: _meetingTypes.first,
       );
     }
   }
@@ -144,14 +147,13 @@ class _ScheduleFormState extends State<ScheduleForm> {
       appBar: AppBar(
         title: Text(widget.isEditing ? 'スケジュール編集' : 'スケジュール登録'),
       ),
-      body: SafeArea(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
               children: [
                 BasicInfoSection(
                   formData: _formData,
