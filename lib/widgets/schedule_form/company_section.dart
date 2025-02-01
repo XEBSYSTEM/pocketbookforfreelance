@@ -27,6 +27,7 @@ class CompanySection extends StatelessWidget {
       children: [
         // エージェント
         Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
               child: DropdownButtonFormField<String>(
@@ -42,6 +43,9 @@ class CompanySection extends StatelessWidget {
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.black),
                   ),
+                  isDense: true,
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                 ),
                 style: const TextStyle(color: Colors.black),
                 value: formData.agentId,
@@ -50,21 +54,29 @@ class CompanySection extends StatelessWidget {
                           value: agent['id'].toString(),
                           child: Text(
                             agent['company_name'],
-                            style: const TextStyle(color: Colors.black),
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 13,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ))
                     .toList(),
                 onChanged: onAgentChanged,
+                isExpanded: true,
               ),
             ),
             const SizedBox(width: 8),
             SizedBox(
-              width: 80,
+              width: 60,
               child: ElevatedButton(
                 onPressed: onAgentRegisterPressed,
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                ),
                 child: const Text(
                   '登録',
-                  style: TextStyle(fontSize: 12),
+                  style: TextStyle(fontSize: 11),
                 ),
               ),
             ),
@@ -74,6 +86,7 @@ class CompanySection extends StatelessWidget {
 
         // エンド企業
         Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
               child: DropdownButtonFormField<String>(
@@ -89,6 +102,9 @@ class CompanySection extends StatelessWidget {
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.black),
                   ),
+                  isDense: true,
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                 ),
                 style: const TextStyle(color: Colors.black),
                 value: formData.endCompanyId,
@@ -97,21 +113,29 @@ class CompanySection extends StatelessWidget {
                           value: company['id'].toString(),
                           child: Text(
                             company['company_name'],
-                            style: const TextStyle(color: Colors.black),
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 13,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ))
                     .toList(),
                 onChanged: onEndCompanyChanged,
+                isExpanded: true,
               ),
             ),
             const SizedBox(width: 8),
             SizedBox(
-              width: 80,
+              width: 60,
               child: ElevatedButton(
                 onPressed: onEndCompanyRegisterPressed,
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                ),
                 child: const Text(
                   '登録',
-                  style: TextStyle(fontSize: 12),
+                  style: TextStyle(fontSize: 11),
                 ),
               ),
             ),
