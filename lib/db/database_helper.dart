@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../company_detail.dart' show CompanyType;
+import '../models/schedule_form_data.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -340,25 +341,15 @@ class DatabaseHelper {
     try {
       final db = await instance.database;
 
+      // ScheduleFormDataを使用してデータを変換
+      final formData = ScheduleFormData.fromMap(schedule);
+      final mappedData = formData.toMap();
+
       final data = {
-        'title': schedule['title'],
-        'date': DateTime(
-          schedule['date'].year,
-          schedule['date'].month,
-          schedule['date'].day,
-        ).toIso8601String(),
-        'is_all_day': schedule['isAllDay'] ? 1 : 0,
-        'start_time': schedule['startTime'] != null
-            ? '${schedule['startTime'].hour.toString().padLeft(2, '0')}:${schedule['startTime'].minute.toString().padLeft(2, '0')}'
-            : null,
-        'end_time': schedule['endTime'] != null
-            ? '${schedule['endTime'].hour.toString().padLeft(2, '0')}:${schedule['endTime'].minute.toString().padLeft(2, '0')}'
-            : null,
-        'meeting_type': schedule['meetingType'],
-        'url': schedule['url'],
-        'agent_id': schedule['agent'],
-        'end_company_id': schedule['endCompany'],
-        'memo': schedule['memo'],
+        ...mappedData,
+        'is_all_day': mappedData['isAllDay'] ? 1 : 0,
+        'agent_id': mappedData['agent'],
+        'end_company_id': mappedData['endCompany'],
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
       };
@@ -402,36 +393,31 @@ class DatabaseHelper {
 
   // 更新
   Future<int> updateSchedule(int id, Map<String, dynamic> schedule) async {
-    final db = await instance.database;
+    try {
+      final db = await instance.database;
 
-    final data = {
-      'title': schedule['title'],
-      'date': DateTime(
-        schedule['date'].year,
-        schedule['date'].month,
-        schedule['date'].day,
-      ).toIso8601String(),
-      'is_all_day': schedule['isAllDay'] ? 1 : 0,
-      'start_time': schedule['startTime'] != null
-          ? '${schedule['startTime'].hour.toString().padLeft(2, '0')}:${schedule['startTime'].minute.toString().padLeft(2, '0')}'
-          : null,
-      'end_time': schedule['endTime'] != null
-          ? '${schedule['endTime'].hour.toString().padLeft(2, '0')}:${schedule['endTime'].minute.toString().padLeft(2, '0')}'
-          : null,
-      'meeting_type': schedule['meetingType'],
-      'url': schedule['url'],
-      'agent_id': schedule['agent'],
-      'end_company_id': schedule['endCompany'],
-      'memo': schedule['memo'],
-      'updated_at': DateTime.now().toIso8601String(),
-    };
+      // ScheduleFormDataを使用してデータを変換
+      final formData = ScheduleFormData.fromMap(schedule);
+      final mappedData = formData.toMap();
 
-    return await db.update(
-      'schedules',
-      data,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+      final data = {
+        ...mappedData,
+        'is_all_day': mappedData['isAllDay'] ? 1 : 0,
+        'agent_id': mappedData['agent'],
+        'end_company_id': mappedData['endCompany'],
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      return await db.update(
+        'schedules',
+        data,
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    } catch (e) {
+      print('Error updating schedule: $e');
+      throw Exception('スケジュールの更新に失敗しました: $e');
+    }
   }
 
   // 削除
