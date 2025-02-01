@@ -176,14 +176,6 @@ class _CompanyFormState extends State<CompanyForm> {
                     try {
                       print('企業データを登録します: $companyData'); // デバッグログ
 
-                      // 企業種別マスタデータの存在確認
-                      final companyTypes =
-                          await DatabaseHelper.instance.readAllCompanyTypes();
-                      if (companyTypes.isEmpty) {
-                        print('企業種別マスタデータが存在しないため、初期データを投入します'); // デバッグログ
-                        await DatabaseHelper.instance.insertSampleData();
-                      }
-
                       final id = await DatabaseHelper.instance
                           .createCompany(companyData);
                       print('企業データを登録しました。ID: $id'); // デバッグログ

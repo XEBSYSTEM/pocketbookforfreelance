@@ -99,11 +99,6 @@ class DatabaseHelper {
     return await _companyRepository!.deleteCompany(id);
   }
 
-  Future<void> insertSampleData() async {
-    final db = await database;
-    await _companyRepository!.insertSampleData();
-  }
-
   // Schedule Repository Methods
   Future<int> createSchedule(Map<String, dynamic> schedule) async {
     final db = await database;

@@ -25,6 +25,14 @@ class DatabaseMigration {
       )
     ''');
 
+    // 企業種別マスタの初期データを挿入
+    await db.execute('''
+      INSERT INTO company_types (id, type_name, description) VALUES
+      (1, 'エージェント', '人材紹介会社'),
+      (2, 'エンド企業', '最終契約企業'),
+      (3, '中間請け企業', '仲介企業')
+    ''');
+
     // 企業テーブル（エージェント、エンド企業、中間請け企業を統合）
     await db.execute('''
       CREATE TABLE companies (
