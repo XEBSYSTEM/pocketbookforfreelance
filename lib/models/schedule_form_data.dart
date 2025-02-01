@@ -45,15 +45,16 @@ class ScheduleFormData {
 
   // 入力データからインスタンスを作成
   factory ScheduleFormData.fromMap(Map<String, dynamic> data) {
-    String? startTimeStr = data['startTime']?.toString();
-    String? endTimeStr = data['endTime']?.toString();
-
     return ScheduleFormData(
       title: data['title'] ?? '',
       date: data['date'],
       isAllDay: data['isAllDay'] ?? false,
-      startTime: _parseTimeString(startTimeStr),
-      endTime: _parseTimeString(endTimeStr),
+      startTime: data['startTime'] is TimeOfDay
+          ? data['startTime']
+          : _parseTimeString(data['startTime']?.toString()),
+      endTime: data['endTime'] is TimeOfDay
+          ? data['endTime']
+          : _parseTimeString(data['endTime']?.toString()),
       meetingType: data['meetingType'],
       url: data['url'] ?? '',
       agentId: data['agent']?.toString(),
