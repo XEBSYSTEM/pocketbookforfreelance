@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'agent_edit.dart';
-import 'end_company_edit.dart';
-import 'intermediary_company_edit.dart';
+import 'company_edit.dart';
 import 'db/database_helper.dart';
 
 enum CompanyType {
@@ -156,32 +154,22 @@ class _CompanyDetailState extends State<CompanyDetail> {
       onPressed: _isLoading || _companyData == null
           ? null
           : () async {
-              final editScreen = switch (widget.companyType) {
-                CompanyType.agent => AgentEdit(
-                    agentId: widget.companyId,
-                    initialData: _companyData!,
-                  ),
-                CompanyType.end => EndCompanyEdit(
-                    companyId: widget.companyId,
-                    initialData: _companyData!,
-                  ),
-                CompanyType.intermediary => IntermediaryCompanyEdit(
-                    companyId: widget.companyId,
-                    initialData: _companyData!,
-                  ),
-              };
+              final editScreen = CompanyEdit(
+                companyId: widget.companyId,
+                initialData: _companyData!,
+                initialCompanyType: widget.companyType,
+              );
 
-              final updatedData = await Navigator.push<Map<String, dynamic>>(
+              final isUpdated = await Navigator.push<bool>(
                 context,
                 MaterialPageRoute(
                   builder: (context) => editScreen,
                 ),
               );
 
-              if (updatedData != null) {
-                setState(() {
-                  _companyData = updatedData;
-                });
+              if (isUpdated == true) {
+                // データを再読み込み
+                await _loadCompanyData();
               }
             },
       icon: const Icon(Icons.edit),
