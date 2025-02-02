@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../db/handwriting_memo_repository.dart';
+import 'dart:developer' as developer;
 
 class HandwritingMemoScreen extends StatefulWidget {
   const HandwritingMemoScreen({super.key});
@@ -101,8 +102,15 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
       final Uint8List memoData = byteData.buffer.asUint8List();
 
       // サムネイルの生成（元のイメージを縮小）
+      developer.log('サムネイル生成を開始します',
+          name: 'HandwritingMemoScreen._saveHandwritingMemo');
+
       final double scale = 0.2; // サムネイルのサイズを20%に
       final ui.Image thumbnailImage = await boundary.toImage(pixelRatio: scale);
+      developer.log(
+          'サムネイル画像を生成しました: ${thumbnailImage.width}x${thumbnailImage.height}',
+          name: 'HandwritingMemoScreen._saveHandwritingMemo');
+
       final ByteData? thumbnailByteData =
           await thumbnailImage.toByteData(format: ui.ImageByteFormat.png);
 
@@ -111,6 +119,8 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
       }
 
       final Uint8List thumbnailData = thumbnailByteData.buffer.asUint8List();
+      developer.log('サムネイルデータを生成しました: ${thumbnailData.length} bytes',
+          name: 'HandwritingMemoScreen._saveHandwritingMemo');
 
       // データベースに保存
       await _repository.insertHandwritingMemo(memoData, thumbnailData);
@@ -124,6 +134,8 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
         });
       }
     } catch (e) {
+      developer.log('メモの保存中にエラーが発生しました',
+          name: 'HandwritingMemoScreen._saveHandwritingMemo', error: e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('保存に失敗しました: ${e.toString()}')),
