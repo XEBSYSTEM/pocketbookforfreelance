@@ -11,6 +11,10 @@ class DatabaseMigration {
     if (oldVersion < 5) {
       await _migrateToVersion5(db);
     }
+
+    if (oldVersion < 6) {
+      await _migrateToVersion6(db);
+    }
   }
 
   static Future<void> _createInitialTables(Database db) async {
@@ -151,5 +155,18 @@ class DatabaseMigration {
         )
       ''');
     }
+  }
+
+  static Future<void> _migrateToVersion6(Database db) async {
+    // 手書きメモテーブルを作成
+    await db.execute('''
+      CREATE TABLE handwriting_memos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        memo_data BLOB NOT NULL,
+        thumbnail_data BLOB NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
   }
 }

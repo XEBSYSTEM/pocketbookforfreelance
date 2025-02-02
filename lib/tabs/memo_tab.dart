@@ -1,5 +1,7 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
+import '../screens/handwriting_memo_screen.dart';
+import '../db/handwriting_memo_repository.dart';
 
 class MemoTab extends StatefulWidget {
   const MemoTab({super.key});
@@ -9,73 +11,104 @@ class MemoTab extends StatefulWidget {
 }
 
 class _MemoTabState extends State<MemoTab> {
-  final List<List<Offset>> _strokes = [];
-  List<Offset>? _currentStroke;
+  final HandwritingMemoRepository _repository = HandwritingMemoRepository();
+  List<Map<String, dynamic>> _memos = [];
+  bool _isLoading = false;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: GestureDetector(
-        onPanStart: (details) {
-          setState(() {
-            _currentStroke = [details.localPosition];
-            _strokes.add(_currentStroke!);
-          });
-        },
-        onPanUpdate: (details) {
-          setState(() {
-            _currentStroke?.add(details.localPosition);
-          });
-        },
-        onPanEnd: (details) {
-          setState(() {
-            _currentStroke = null;
-          });
-        },
-        child: CustomPaint(
-          painter: HandwritingPainter(_strokes),
-          size: Size.infinite,
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            _strokes.clear();
-          });
-        },
-        child: const Icon(Icons.clear),
-      ),
-    );
+  void initState() {
+    super.initState();
+    _loadMemos();
   }
-}
 
-class HandwritingPainter extends CustomPainter {
-  final List<List<Offset>> strokes;
+  Future<void> _loadMemos() async {
+    setState(() {
+      _isLoading = true;
+    });
 
-  HandwritingPainter(this.strokes);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.black
-      ..strokeWidth = 3.0
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    for (final stroke in strokes) {
-      if (stroke.length < 2) continue;
-
-      final path = Path();
-      path.moveTo(stroke[0].dx, stroke[0].dy);
-
-      for (int i = 1; i < stroke.length; i++) {
-        path.lineTo(stroke[i].dx, stroke[i].dy);
+    try {
+      final memos = await _repository.getAllHandwritingMemos();
+      setState(() {
+        _memos = memos;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('メモの読み込みに失敗しました: ${e.toString()}')),
+        );
       }
-
-      canvas.drawPath(path, paint);
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
   @override
-  bool shouldRepaint(HandwritingPainter oldDelegate) => true;
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _memos.isEmpty
+              ? const Center(child: Text('メモがありません'))
+              : GridView.builder(
+                  padding: const EdgeInsets.all(8),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 1,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                  ),
+                  itemCount: _memos.length,
+                  itemBuilder: (context, index) {
+                    final memo = _memos[index];
+                    final thumbnailData = memo['thumbnail_data'] as Uint8List;
+                    final createdAt =
+                        DateTime.parse(memo['created_at'] as String);
+
+                    return Card(
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        onTap: () {
+                          // TODO: メモの詳細表示画面に遷移
+                        },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: Image.memory(
+                                thumbnailData,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Text(
+                                createdAt.toLocal().toString().split('.')[0],
+                                style: Theme.of(context).textTheme.bodySmall,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const HandwritingMemoScreen(),
+            ),
+          );
+          // 画面に戻ってきたときにメモを再読み込み
+          _loadMemos();
+        },
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
 }
