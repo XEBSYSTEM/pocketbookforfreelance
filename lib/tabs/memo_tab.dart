@@ -74,7 +74,7 @@ class _MemoTabState extends State<MemoTab> {
                           final memoDetails =
                               await _repository.getHandwritingMemo(memo['id']);
                           if (memoDetails != null && mounted) {
-                            await Navigator.push(
+                            final result = await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
@@ -86,6 +86,9 @@ class _MemoTabState extends State<MemoTab> {
                                 ),
                               ),
                             );
+                            if (result == true) {
+                              await _loadMemos();
+                            }
                           }
                         },
                         child: Column(
