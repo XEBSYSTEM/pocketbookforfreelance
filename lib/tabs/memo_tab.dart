@@ -55,8 +55,8 @@ class _MemoTabState extends State<MemoTab> {
               : GridView.builder(
                   padding: const EdgeInsets.all(8),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: MediaQuery.of(context).size.width ~/ 50,
-                    childAspectRatio: 0.8,
+                    crossAxisCount: MediaQuery.of(context).size.width ~/ 240,
+                    childAspectRatio: 1,
                     crossAxisSpacing: 8,
                     mainAxisSpacing: 8,
                   ),
