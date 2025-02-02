@@ -236,7 +236,13 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
               eraserPosition: _eraserPosition,
               eraserWidth: _strokeWidth,
             ),
-            size: MediaQuery.of(context).size,
+            size: Size(
+              MediaQuery.of(context).size.width,
+              MediaQuery.of(context).size.height -
+                  kToolbarHeight -
+                  kBottomNavigationBarHeight -
+                  MediaQuery.of(context).padding.vertical,
+            ),
           ),
         ),
       ),
