@@ -1,9 +1,29 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../db/handwriting_memo_repository.dart';
 import 'dart:developer' as developer;
+
+enum DrawingMode {
+  pen,
+  eraser,
+}
+
+class DrawStroke {
+  final List<Offset> points;
+  final DrawingMode mode;
+
+  DrawStroke({
+    required this.points,
+    required this.mode,
+  });
+
+  bool get isEmpty => points.isEmpty;
+  int get length => points.length;
+  Offset operator [](int index) => points[index];
+}
 
 class HandwritingMemoScreen extends StatefulWidget {
   final Uint8List? initialMemoData;
@@ -19,13 +39,8 @@ class HandwritingMemoScreen extends StatefulWidget {
   State<HandwritingMemoScreen> createState() => _HandwritingMemoScreenState();
 }
 
-enum DrawingMode {
-  pen,
-  eraser,
-}
-
 class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
-  final List<List<Offset>> _strokes = [];
+  final List<DrawStroke> _strokes = [];
   late Image? _backgroundImage;
   DrawingMode _currentMode = DrawingMode.pen;
 
@@ -44,6 +59,29 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
   final HandwritingMemoRepository _repository = HandwritingMemoRepository();
   bool _isSaving = false;
 
+  // 点と線分の距離を計算するヘルパーメソッド
+  double _pointToLineDistance(Offset point, Offset lineStart, Offset lineEnd) {
+    final double normalLength = math.sqrt(
+        math.pow(lineEnd.dx - lineStart.dx, 2) +
+            math.pow(lineEnd.dy - lineStart.dy, 2));
+
+    if (normalLength == 0) return (point - lineStart).distance;
+
+    final double t = ((point.dx - lineStart.dx) * (lineEnd.dx - lineStart.dx) +
+            (point.dy - lineStart.dy) * (lineEnd.dy - lineStart.dy)) /
+        (normalLength * normalLength);
+
+    if (t < 0) return (point - lineStart).distance;
+    if (t > 1) return (point - lineEnd).distance;
+
+    final nearestPoint = Offset(
+      lineStart.dx + t * (lineEnd.dx - lineStart.dx),
+      lineStart.dy + t * (lineEnd.dy - lineStart.dy),
+    );
+
+    return (point - nearestPoint).distance;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,25 +92,54 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
         onPanStart: (details) {
           setState(() {
             if (_currentMode == DrawingMode.eraser) {
-              // 消しゴムモードの場合、同じ位置に始点と終点を設定
-              _currentStroke = [details.localPosition, details.localPosition];
-            } else {
+              // 消しゴムモードの場合は現在のストロークは追加しない
               _currentStroke = [details.localPosition];
+            } else {
+              final points = [details.localPosition];
+              final stroke = DrawStroke(
+                points: points,
+                mode: _currentMode,
+              );
+              _currentStroke = points;
+              _strokes.add(stroke);
             }
-            _strokes.add(_currentStroke!);
           });
         },
         onPanUpdate: (details) {
-          setState(() {
-            if (_currentMode == DrawingMode.eraser) {
-              // 消しゴムモードの場合、最後の点を更新
-              if (_currentStroke != null && _currentStroke!.length >= 2) {
-                _currentStroke![1] = details.localPosition;
+          if (_currentMode == DrawingMode.eraser) {
+            setState(() {
+              final currentPoint = details.localPosition;
+              final eraserRadius = 20.0;
+
+              // 過去のストロークをチェック
+              for (int i = 0; i < _strokes.length; i++) {
+                final stroke = _strokes[i];
+                if (stroke.mode == DrawingMode.eraser || stroke.isEmpty)
+                  continue;
+
+                // ストロークの各セグメントをチェック
+                for (int j = 1; j < stroke.length; j++) {
+                  final p1 = stroke[j - 1];
+                  final p2 = stroke[j];
+
+                  // 点と線分の距離を計算
+                  final distance = _pointToLineDistance(currentPoint, p1, p2);
+                  if (distance < eraserRadius) {
+                    // 交差した場合、ストロークを削除
+                    _strokes[i] = DrawStroke(points: [], mode: stroke.mode);
+                    break;
+                  }
+                }
               }
-            } else {
+
+              // 消しゴムの軌跡を更新
               _currentStroke?.add(details.localPosition);
-            }
-          });
+            });
+          } else {
+            setState(() {
+              _currentStroke?.add(details.localPosition);
+            });
+          }
         },
         onPanEnd: (details) {
           setState(() {
@@ -227,69 +294,30 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
 }
 
 class HandwritingPainter extends CustomPainter {
-  final List<List<Offset>> strokes;
+  final List<DrawStroke> strokes;
   final double strokeWidth = 3.0;
-  final double eraserWidth = 20.0;
 
   HandwritingPainter(this.strokes);
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (int i = 0; i < strokes.length; i++) {
-      final stroke = strokes[i];
+    for (final stroke in strokes) {
+      if (stroke.isEmpty || stroke.mode == DrawingMode.eraser) continue;
+
       final paint = Paint()
+        ..color = Colors.black
+        ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.round
         ..style = PaintingStyle.stroke;
 
-      // 最後のストロークが消しゴムの場合、他のストロークと交差するか確認
-      if (i == strokes.length - 1 &&
-          stroke.isNotEmpty &&
-          stroke.first == stroke.last) {
-        paint.color = Colors.transparent;
-        paint.strokeWidth = eraserWidth;
+      final path = Path();
+      path.moveTo(stroke[0].dx, stroke[0].dy);
 
-        // 消しゴムの範囲を計算
-        final eraserPath = Path();
-        for (int j = 0; j < stroke.length; j++) {
-          if (j == 0) {
-            eraserPath.moveTo(stroke[j].dx, stroke[j].dy);
-          } else {
-            eraserPath.lineTo(stroke[j].dx, stroke[j].dy);
-          }
-        }
-
-        // 他のストロークと交差するか確認し、交差する部分を削除
-        for (int j = strokes.length - 2; j >= 0; j--) {
-          final targetStroke = strokes[j];
-          if (targetStroke.isEmpty) continue;
-
-          final targetPath = Path();
-          targetPath.moveTo(targetStroke[0].dx, targetStroke[0].dy);
-          for (int k = 1; k < targetStroke.length; k++) {
-            targetPath.lineTo(targetStroke[k].dx, targetStroke[k].dy);
-          }
-
-          // パスが交差するか確認
-          final bounds = eraserPath.getBounds();
-          final targetBounds = targetPath.getBounds();
-          if (bounds.overlaps(targetBounds)) {
-            strokes[j] = [];
-          }
-        }
-      } else {
-        // 通常のペンストローク
-        paint.color = Colors.black;
-        paint.strokeWidth = strokeWidth;
-
-        if (stroke.isEmpty) continue;
-
-        final path = Path();
-        path.moveTo(stroke[0].dx, stroke[0].dy);
-        for (int j = 1; j < stroke.length; j++) {
-          path.lineTo(stroke[j].dx, stroke[j].dy);
-        }
-        canvas.drawPath(path, paint);
+      for (int i = 1; i < stroke.length; i++) {
+        path.lineTo(stroke[i].dx, stroke[i].dy);
       }
+
+      canvas.drawPath(path, paint);
     }
   }
 
