@@ -5,48 +5,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../db/handwriting_memo_repository.dart';
+import '../models/drawing_point.dart';
+import '../widgets/handwriting_painter.dart';
+import '../widgets/stroke_control_bar.dart';
 import 'dart:developer' as developer;
-
-enum DrawingMode {
-  pen,
-  eraser,
-}
-
-class DrawPoint {
-  final Offset position;
-  final DrawingMode mode;
-  final DateTime timestamp;
-  final double strokeWidth;
-
-  DrawPoint({
-    required this.position,
-    required this.mode,
-    required this.strokeWidth,
-    DateTime? timestamp,
-  }) : timestamp = timestamp ?? DateTime.now();
-
-  Map<String, dynamic> toJson() {
-    return {
-      'x': position.dx,
-      'y': position.dy,
-      'mode': mode.toString(),
-      'timestamp': timestamp.millisecondsSinceEpoch,
-      'strokeWidth': strokeWidth,
-    };
-  }
-
-  factory DrawPoint.fromJson(Map<String, dynamic> json) {
-    return DrawPoint(
-      position: Offset(json['x'] as double, json['y'] as double),
-      mode: DrawingMode.values.firstWhere(
-        (e) => e.toString() == json['mode'],
-        orElse: () => DrawingMode.pen,
-      ),
-      strokeWidth: (json['strokeWidth'] as num?)?.toDouble() ?? 2.0,
-      timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
-    );
-  }
-}
 
 class HandwritingMemoScreen extends StatefulWidget {
   final Uint8List? initialMemoData;
@@ -70,6 +32,9 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
   double _strokeWidth = 2.0;
 
   final List<double> _availableStrokeWidths = [1, 2, 4, 8, 16];
+  final GlobalKey _canvasKey = GlobalKey();
+  final HandwritingMemoRepository _repository = HandwritingMemoRepository();
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -107,10 +72,6 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
       }
     }
   }
-
-  final GlobalKey _canvasKey = GlobalKey();
-  final HandwritingMemoRepository _repository = HandwritingMemoRepository();
-  bool _isSaving = false;
 
   void _handleDrawing(Offset position) {
     setState(() {
@@ -165,124 +126,6 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
     final projection = start + (b * t);
 
     return (p - projection).distance.toDouble();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('手書きメモ'),
-      ),
-      body: GestureDetector(
-        onTapDown: (details) => _handleDrawing(details.localPosition),
-        onPanStart: (details) => _handleDrawing(details.localPosition),
-        onPanUpdate: (details) => _handleDrawing(details.localPosition),
-        onPanEnd: (details) {
-          setState(() {
-            _eraserPosition = null;
-          });
-        },
-        child: RepaintBoundary(
-          key: _canvasKey,
-          child: CustomPaint(
-            painter: HandwritingPainter(
-              _points,
-              eraserPosition: _eraserPosition,
-              eraserWidth: _strokeWidth,
-            ),
-            size: Size.infinite,
-          ),
-        ),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            ..._availableStrokeWidths.map((width) {
-              return IconButton(
-                onPressed: () {
-                  setState(() {
-                    _strokeWidth = width;
-                  });
-                },
-                icon: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: _strokeWidth == width ? Colors.blue : Colors.grey,
-                      width: 2,
-                    ),
-                  ),
-                  child: Center(
-                    child: Container(
-                      width: width,
-                      height: width,
-                      decoration: BoxDecoration(
-                        color: _currentMode == DrawingMode.pen
-                            ? Colors.black
-                            : Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ],
-        ),
-      ),
-      floatingActionButton: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            heroTag: 'eraser',
-            onPressed: () {
-              setState(() {
-                _currentMode = _currentMode == DrawingMode.eraser
-                    ? DrawingMode.pen
-                    : DrawingMode.eraser;
-                _eraserPosition = null;
-              });
-            },
-            child: Icon(
-              _currentMode == DrawingMode.eraser
-                  ? Icons.edit
-                  : Icons.auto_fix_normal,
-            ),
-            backgroundColor:
-                _currentMode == DrawingMode.eraser ? Colors.red : null,
-          ),
-          const SizedBox(width: 16),
-          FloatingActionButton(
-            heroTag: 'clear',
-            onPressed: () {
-              setState(() {
-                _points.clear();
-              });
-            },
-            child: const Icon(Icons.clear),
-          ),
-          const SizedBox(width: 16),
-          FloatingActionButton(
-            heroTag: 'save',
-            onPressed: _isSaving ? null : _saveHandwritingMemo,
-            child: _isSaving
-                ? const CircularProgressIndicator(color: Colors.white)
-                : const Icon(Icons.save),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _saveHandwritingMemo() async {
@@ -361,58 +204,93 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
       }
     }
   }
-}
-
-class HandwritingPainter extends CustomPainter {
-  final List<DrawPoint> points;
-  final Offset? eraserPosition;
-  final double eraserWidth;
-  static const interpolationTimeThreshold = Duration(milliseconds: 100);
-
-  HandwritingPainter(
-    this.points, {
-    this.eraserPosition,
-    this.eraserWidth = 2.0,
-  });
 
   @override
-  void paint(Canvas canvas, Size size) {
-    if (eraserPosition != null) {
-      final eraseRadius = eraserWidth * 5.0;
-      final eraserPaint = Paint()
-        ..color = Colors.grey.withOpacity(0.5)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.0;
-      canvas.drawCircle(eraserPosition!, eraseRadius, eraserPaint);
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
     }
 
-    if (points.isEmpty) return;
-
-    for (var i = 0; i < points.length - 1; i++) {
-      final current = points[i];
-      final next = points[i + 1];
-
-      if (next.timestamp.difference(current.timestamp) <=
-          interpolationTimeThreshold) {
-        final paint = Paint()
-          ..color = Colors.black
-          ..strokeWidth = current.strokeWidth
-          ..strokeCap = StrokeCap.round
-          ..style = PaintingStyle.stroke;
-
-        canvas.drawLine(current.position, next.position, paint);
-      }
-    }
-
-    for (final point in points) {
-      final paint = Paint()
-        ..color = Colors.black
-        ..style = PaintingStyle.fill;
-
-      canvas.drawCircle(point.position, point.strokeWidth / 2, paint);
-    }
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('手書きメモ'),
+      ),
+      body: GestureDetector(
+        onTapDown: (details) => _handleDrawing(details.localPosition),
+        onPanStart: (details) => _handleDrawing(details.localPosition),
+        onPanUpdate: (details) => _handleDrawing(details.localPosition),
+        onPanEnd: (details) {
+          setState(() {
+            _eraserPosition = null;
+          });
+        },
+        child: RepaintBoundary(
+          key: _canvasKey,
+          child: CustomPaint(
+            painter: HandwritingPainter(
+              _points,
+              eraserPosition: _eraserPosition,
+              eraserWidth: _strokeWidth,
+            ),
+            size: Size.infinite,
+          ),
+        ),
+      ),
+      bottomNavigationBar: StrokeControlBar(
+        availableStrokeWidths: _availableStrokeWidths,
+        currentStrokeWidth: _strokeWidth,
+        currentMode: _currentMode,
+        onStrokeWidthChanged: (width) {
+          setState(() {
+            _strokeWidth = width;
+          });
+        },
+      ),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            heroTag: 'eraser',
+            onPressed: () {
+              setState(() {
+                _currentMode = _currentMode == DrawingMode.eraser
+                    ? DrawingMode.pen
+                    : DrawingMode.eraser;
+                _eraserPosition = null;
+              });
+            },
+            child: Icon(
+              _currentMode == DrawingMode.eraser
+                  ? Icons.edit
+                  : Icons.auto_fix_normal,
+            ),
+            backgroundColor:
+                _currentMode == DrawingMode.eraser ? Colors.red : null,
+          ),
+          const SizedBox(width: 16),
+          FloatingActionButton(
+            heroTag: 'clear',
+            onPressed: () {
+              setState(() {
+                _points.clear();
+              });
+            },
+            child: const Icon(Icons.clear),
+          ),
+          const SizedBox(width: 16),
+          FloatingActionButton(
+            heroTag: 'save',
+            onPressed: _isSaving ? null : _saveHandwritingMemo,
+            child: _isSaving
+                ? const CircularProgressIndicator(color: Colors.white)
+                : const Icon(Icons.save),
+          ),
+        ],
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(HandwritingPainter oldDelegate) => true;
 }
