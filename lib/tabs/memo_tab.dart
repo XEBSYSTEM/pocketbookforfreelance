@@ -54,9 +54,9 @@ class _MemoTabState extends State<MemoTab> {
               ? const Center(child: Text('メモがありません'))
               : GridView.builder(
                   padding: const EdgeInsets.all(8),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 1,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: MediaQuery.of(context).size.width ~/ 50,
+                    childAspectRatio: 0.8,
                     crossAxisSpacing: 8,
                     mainAxisSpacing: 8,
                   ),
