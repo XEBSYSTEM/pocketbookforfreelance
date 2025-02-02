@@ -33,7 +33,7 @@ class HandwritingPainter extends CustomPainter {
       if (next.timestamp.difference(current.timestamp) <=
           interpolationTimeThreshold) {
         final paint = Paint()
-          ..color = Colors.black
+          ..color = current.color
           ..strokeWidth = current.strokeWidth
           ..strokeCap = StrokeCap.round
           ..style = PaintingStyle.stroke;
@@ -44,7 +44,7 @@ class HandwritingPainter extends CustomPainter {
 
     for (final point in points) {
       final paint = Paint()
-        ..color = Colors.black
+        ..color = point.color
         ..style = PaintingStyle.fill;
 
       canvas.drawCircle(point.position, point.strokeWidth / 2, paint);

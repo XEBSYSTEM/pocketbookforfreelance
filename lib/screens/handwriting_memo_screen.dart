@@ -30,6 +30,7 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
   bool _isLoading = false;
   Offset? _eraserPosition;
   double _strokeWidth = 2.0;
+  Color _currentColor = Colors.black;
 
   final List<double> _availableStrokeWidths = [1, 2, 4, 8, 16];
   final GlobalKey _canvasKey = GlobalKey();
@@ -107,6 +108,7 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
           position: position,
           mode: _currentMode,
           strokeWidth: _strokeWidth,
+          color: _currentColor,
         ));
       });
     }
@@ -255,9 +257,15 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
         availableStrokeWidths: _availableStrokeWidths,
         currentStrokeWidth: _strokeWidth,
         currentMode: _currentMode,
+        currentColor: _currentColor,
         onStrokeWidthChanged: (width) {
           setState(() {
             _strokeWidth = width;
+          });
+        },
+        onColorChanged: (color) {
+          setState(() {
+            _currentColor = color;
           });
         },
       ),

@@ -10,11 +10,13 @@ class DrawPoint {
   final DrawingMode mode;
   final DateTime timestamp;
   final double strokeWidth;
+  final Color color;
 
   DrawPoint({
     required this.position,
     required this.mode,
     required this.strokeWidth,
+    this.color = Colors.black,
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();
 
@@ -25,6 +27,7 @@ class DrawPoint {
       'mode': mode.toString(),
       'timestamp': timestamp.millisecondsSinceEpoch,
       'strokeWidth': strokeWidth,
+      'color': color.value,
     };
   }
 
@@ -37,6 +40,7 @@ class DrawPoint {
       ),
       strokeWidth: (json['strokeWidth'] as num?)?.toDouble() ?? 2.0,
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
+      color: Color(json['color'] as int),
     );
   }
 }
