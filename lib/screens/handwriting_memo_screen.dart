@@ -62,52 +62,44 @@ class HandwritingMemoScreen extends StatefulWidget {
 
 class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
   final List<DrawPoint> _points = [];
-  late Image? _backgroundImage;
   DrawingMode _currentMode = DrawingMode.pen;
-  bool _isImageLoaded = false;
+  bool _isLoading = false;
   Offset? _eraserPosition; // 消しゴムの現在位置
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialMemoData != null) {
+    if (widget.memoId != null) {
       _loadInitialMemoData();
-    } else {
-      _backgroundImage = null;
-      _isImageLoaded = true;
     }
   }
 
   Future<void> _loadInitialMemoData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
-      final codec = await ui.instantiateImageCodec(widget.initialMemoData!);
-      final frame = await codec.getNextFrame();
-      final image = frame.image;
-
-      // 画像データをバイトデータに変換
-      final byteData = await image.toByteData();
-      if (byteData == null) return;
-
       final repository = HandwritingMemoRepository();
-      if (widget.memoId != null) {
-        final memoData = await repository.getHandwritingMemo(widget.memoId!);
-        if (memoData != null && memoData['stroke_data'] != null) {
-          final pointData = jsonDecode(memoData['stroke_data'] as String);
-          setState(() {
-            _points.addAll(
-              (pointData as List).map((p) => DrawPoint.fromJson(p)),
-            );
-          });
-        }
-      }
+      final memoData = await repository.getHandwritingMemo(widget.memoId!);
 
-      setState(() {
-        _backgroundImage = Image.memory(widget.initialMemoData!);
-        _isImageLoaded = true;
-      });
+      if (memoData != null && memoData['stroke_data'] != null) {
+        final pointData = jsonDecode(memoData['stroke_data'] as String);
+        setState(() {
+          _points.addAll(
+            (pointData as List).map((p) => DrawPoint.fromJson(p)),
+          );
+        });
+      }
     } catch (e) {
-      developer.log('初期メモデータの読み込みに失敗しました: $e',
+      developer.log('メモデータの読み込みに失敗しました: $e',
           name: 'HandwritingMemoScreen._loadInitialMemoData', error: e);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -178,7 +170,7 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_isImageLoaded) {
+    if (_isLoading) {
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(),
@@ -190,39 +182,29 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
       appBar: AppBar(
         title: const Text('手書きメモ'),
       ),
-      body: Stack(
-        children: [
-          if (_backgroundImage != null)
-            Positioned.fill(
-              child: _backgroundImage!,
-            ),
-          Positioned.fill(
-            child: GestureDetector(
-              onTapDown: (details) {
-                _handleDrawing(details.localPosition);
-              },
-              onPanStart: (details) {
-                _handleDrawing(details.localPosition);
-              },
-              onPanUpdate: (details) {
-                _handleDrawing(details.localPosition);
-              },
-              onPanEnd: (details) {
-                setState(() {
-                  _eraserPosition = null;
-                });
-              },
-              child: RepaintBoundary(
-                key: _canvasKey,
-                child: CustomPaint(
-                  painter: HandwritingPainter(_points,
-                      eraserPosition: _eraserPosition),
-                  size: Size.infinite,
-                ),
-              ),
-            ),
+      body: GestureDetector(
+        onTapDown: (details) {
+          _handleDrawing(details.localPosition);
+        },
+        onPanStart: (details) {
+          _handleDrawing(details.localPosition);
+        },
+        onPanUpdate: (details) {
+          _handleDrawing(details.localPosition);
+        },
+        onPanEnd: (details) {
+          setState(() {
+            _eraserPosition = null;
+          });
+        },
+        child: RepaintBoundary(
+          key: _canvasKey,
+          child: CustomPaint(
+            painter:
+                HandwritingPainter(_points, eraserPosition: _eraserPosition),
+            size: Size.infinite,
           ),
-        ],
+        ),
       ),
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.end,
