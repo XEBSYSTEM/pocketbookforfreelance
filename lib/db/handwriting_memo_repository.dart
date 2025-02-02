@@ -10,7 +10,7 @@ class HandwritingMemoRepository {
   }
 
   Future<int> insertHandwritingMemo(
-      Uint8List memoData, Uint8List thumbnailData) async {
+      Uint8List memoData, Uint8List thumbnailData, String strokeData) async {
     try {
       developer.log('手書きメモの保存を開始します',
           name: 'HandwritingMemoRepository.insertHandwritingMemo');
@@ -25,6 +25,7 @@ class HandwritingMemoRepository {
           'thumbnail_data': thumbnailData,
           'created_at': DateTime.now().toIso8601String(),
           'updated_at': DateTime.now().toIso8601String(),
+          'stroke_data': strokeData,
         },
       );
 
@@ -58,8 +59,8 @@ class HandwritingMemoRepository {
     return result.first;
   }
 
-  Future<int> updateHandwritingMemo(
-      int id, Uint8List memoData, Uint8List thumbnailData) async {
+  Future<int> updateHandwritingMemo(int id, Uint8List memoData,
+      Uint8List thumbnailData, String strokeData) async {
     try {
       developer.log('手書きメモの更新を開始します: ID=$id',
           name: 'HandwritingMemoRepository.updateHandwritingMemo');
@@ -73,6 +74,7 @@ class HandwritingMemoRepository {
           'memo_data': memoData,
           'thumbnail_data': thumbnailData,
           'updated_at': DateTime.now().toIso8601String(),
+          'stroke_data': strokeData,
         },
         where: 'id = ?',
         whereArgs: [id],

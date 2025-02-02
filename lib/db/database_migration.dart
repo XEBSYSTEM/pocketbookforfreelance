@@ -15,6 +15,10 @@ class DatabaseMigration {
     if (oldVersion < 6) {
       await _migrateToVersion6(db);
     }
+
+    if (oldVersion < 7) {
+      await _migrateToVersion7(db);
+    }
   }
 
   static Future<void> _createInitialTables(Database db) async {
@@ -164,6 +168,22 @@ class DatabaseMigration {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         memo_data BLOB NOT NULL,
         thumbnail_data BLOB NOT NULL,
+        stroke_data TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
+  }
+
+  static Future<void> _migrateToVersion7(Database db) async {
+    // 既存のhandwriting_memosテーブルを削除して再作成
+    await db.execute('DROP TABLE IF EXISTS handwriting_memos');
+    await db.execute('''
+      CREATE TABLE handwriting_memos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        memo_data BLOB NOT NULL,
+        thumbnail_data BLOB NOT NULL,
+        stroke_data TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )

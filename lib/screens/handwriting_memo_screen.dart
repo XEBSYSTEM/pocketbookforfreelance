@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../db/handwriting_memo_repository.dart';
@@ -23,6 +24,26 @@ class DrawStroke {
   bool get isEmpty => points.isEmpty;
   int get length => points.length;
   Offset operator [](int index) => points[index];
+
+  // JSONシリアライズ
+  Map<String, dynamic> toJson() {
+    return {
+      'points': points.map((p) => {'x': p.dx, 'y': p.dy}).toList(),
+      'mode': mode.toString(),
+    };
+  }
+
+  // JSONデシリアライズ
+  factory DrawStroke.fromJson(Map<String, dynamic> json) {
+    return DrawStroke(
+      points:
+          (json['points'] as List).map((p) => Offset(p['x'], p['y'])).toList(),
+      mode: DrawingMode.values.firstWhere(
+        (e) => e.toString() == json['mode'],
+        orElse: () => DrawingMode.pen,
+      ),
+    );
+  }
 }
 
 class HandwritingMemoScreen extends StatefulWidget {
@@ -43,14 +64,49 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
   final List<DrawStroke> _strokes = [];
   late Image? _backgroundImage;
   DrawingMode _currentMode = DrawingMode.pen;
+  bool _isImageLoaded = false;
 
   @override
   void initState() {
     super.initState();
     if (widget.initialMemoData != null) {
-      _backgroundImage = Image.memory(widget.initialMemoData!);
+      _loadInitialMemoData();
     } else {
       _backgroundImage = null;
+      _isImageLoaded = true;
+    }
+  }
+
+  Future<void> _loadInitialMemoData() async {
+    try {
+      final codec = await ui.instantiateImageCodec(widget.initialMemoData!);
+      final frame = await codec.getNextFrame();
+      final image = frame.image;
+
+      // 画像データをバイトデータに変換
+      final byteData = await image.toByteData();
+      if (byteData == null) return;
+
+      final repository = HandwritingMemoRepository();
+      if (widget.memoId != null) {
+        final memoData = await repository.getHandwritingMemo(widget.memoId!);
+        if (memoData != null && memoData['stroke_data'] != null) {
+          final strokeData = jsonDecode(memoData['stroke_data'] as String);
+          setState(() {
+            _strokes.addAll(
+              (strokeData as List).map((s) => DrawStroke.fromJson(s)),
+            );
+          });
+        }
+      }
+
+      setState(() {
+        _backgroundImage = Image.memory(widget.initialMemoData!);
+        _isImageLoaded = true;
+      });
+    } catch (e) {
+      developer.log('初期メモデータの読み込みに失敗しました: $e',
+          name: 'HandwritingMemoScreen._loadInitialMemoData', error: e);
     }
   }
 
@@ -84,6 +140,14 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_isImageLoaded) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('手書きメモ'),
@@ -253,6 +317,9 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
           'サムネイルデータを生成しました - PNG圧縮後のサイズ: ${thumbnailData.length}bytes, 圧縮率: ${(thumbnailData.length / (thumbnailImage.height * thumbnailImage.width * 4) * 100).toStringAsFixed(2)}%',
           name: 'HandwritingMemoScreen._saveHandwritingMemo');
 
+      // ストロークデータをJSONに変換
+      final strokeData = jsonEncode(_strokes.map((s) => s.toJson()).toList());
+
       // データベースに保存
       if (widget.memoId != null) {
         // 既存メモの更新
@@ -260,10 +327,15 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
           widget.memoId!,
           memoData,
           thumbnailData,
+          strokeData,
         );
       } else {
         // 新規メモの保存
-        await _repository.insertHandwritingMemo(memoData, thumbnailData);
+        await _repository.insertHandwritingMemo(
+          memoData,
+          thumbnailData,
+          strokeData,
+        );
       }
 
       if (mounted) {
