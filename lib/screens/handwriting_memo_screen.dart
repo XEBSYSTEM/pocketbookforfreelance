@@ -19,9 +19,15 @@ class HandwritingMemoScreen extends StatefulWidget {
   State<HandwritingMemoScreen> createState() => _HandwritingMemoScreenState();
 }
 
+enum DrawingMode {
+  pen,
+  eraser,
+}
+
 class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
   final List<List<Offset>> _strokes = [];
   late Image? _backgroundImage;
+  DrawingMode _currentMode = DrawingMode.pen;
 
   @override
   void initState() {
@@ -47,13 +53,25 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
       body: GestureDetector(
         onPanStart: (details) {
           setState(() {
-            _currentStroke = [details.localPosition];
+            if (_currentMode == DrawingMode.eraser) {
+              // 消しゴムモードの場合、同じ位置に始点と終点を設定
+              _currentStroke = [details.localPosition, details.localPosition];
+            } else {
+              _currentStroke = [details.localPosition];
+            }
             _strokes.add(_currentStroke!);
           });
         },
         onPanUpdate: (details) {
           setState(() {
-            _currentStroke?.add(details.localPosition);
+            if (_currentMode == DrawingMode.eraser) {
+              // 消しゴムモードの場合、最後の点を更新
+              if (_currentStroke != null && _currentStroke!.length >= 2) {
+                _currentStroke![1] = details.localPosition;
+              }
+            } else {
+              _currentStroke?.add(details.localPosition);
+            }
           });
         },
         onPanEnd: (details) {
@@ -80,6 +98,24 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          FloatingActionButton(
+            heroTag: 'eraser',
+            onPressed: () {
+              setState(() {
+                _currentMode = _currentMode == DrawingMode.eraser
+                    ? DrawingMode.pen
+                    : DrawingMode.eraser;
+              });
+            },
+            child: Icon(
+              _currentMode == DrawingMode.eraser
+                  ? Icons.edit
+                  : Icons.auto_fix_normal,
+            ),
+            backgroundColor:
+                _currentMode == DrawingMode.eraser ? Colors.red : null,
+          ),
+          const SizedBox(width: 16),
           FloatingActionButton(
             heroTag: 'clear',
             onPressed: () {
@@ -192,28 +228,68 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
 
 class HandwritingPainter extends CustomPainter {
   final List<List<Offset>> strokes;
+  final double strokeWidth = 3.0;
+  final double eraserWidth = 20.0;
 
   HandwritingPainter(this.strokes);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.black
-      ..strokeWidth = 3.0
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
+    for (int i = 0; i < strokes.length; i++) {
+      final stroke = strokes[i];
+      final paint = Paint()
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke;
 
-    for (final stroke in strokes) {
-      if (stroke.length < 2) continue;
+      // 最後のストロークが消しゴムの場合、他のストロークと交差するか確認
+      if (i == strokes.length - 1 &&
+          stroke.isNotEmpty &&
+          stroke.first == stroke.last) {
+        paint.color = Colors.transparent;
+        paint.strokeWidth = eraserWidth;
 
-      final path = Path();
-      path.moveTo(stroke[0].dx, stroke[0].dy);
+        // 消しゴムの範囲を計算
+        final eraserPath = Path();
+        for (int j = 0; j < stroke.length; j++) {
+          if (j == 0) {
+            eraserPath.moveTo(stroke[j].dx, stroke[j].dy);
+          } else {
+            eraserPath.lineTo(stroke[j].dx, stroke[j].dy);
+          }
+        }
 
-      for (int i = 1; i < stroke.length; i++) {
-        path.lineTo(stroke[i].dx, stroke[i].dy);
+        // 他のストロークと交差するか確認し、交差する部分を削除
+        for (int j = strokes.length - 2; j >= 0; j--) {
+          final targetStroke = strokes[j];
+          if (targetStroke.isEmpty) continue;
+
+          final targetPath = Path();
+          targetPath.moveTo(targetStroke[0].dx, targetStroke[0].dy);
+          for (int k = 1; k < targetStroke.length; k++) {
+            targetPath.lineTo(targetStroke[k].dx, targetStroke[k].dy);
+          }
+
+          // パスが交差するか確認
+          final bounds = eraserPath.getBounds();
+          final targetBounds = targetPath.getBounds();
+          if (bounds.overlaps(targetBounds)) {
+            strokes[j] = [];
+          }
+        }
+      } else {
+        // 通常のペンストローク
+        paint.color = Colors.black;
+        paint.strokeWidth = strokeWidth;
+
+        if (stroke.isEmpty) continue;
+
+        final path = Path();
+        path.moveTo(stroke[0].dx, stroke[0].dy);
+        for (int j = 1; j < stroke.length; j++) {
+          path.lineTo(stroke[j].dx, stroke[j].dy);
+        }
+        canvas.drawPath(path, paint);
       }
-
-      canvas.drawPath(path, paint);
     }
   }
 
