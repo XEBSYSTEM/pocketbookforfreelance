@@ -190,37 +190,39 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
       appBar: AppBar(
         title: const Text('手書きメモ'),
       ),
-      body: GestureDetector(
-        onTapDown: (details) {
-          _handleDrawing(details.localPosition);
-        },
-        onPanStart: (details) {
-          _handleDrawing(details.localPosition);
-        },
-        onPanUpdate: (details) {
-          _handleDrawing(details.localPosition);
-        },
-        onPanEnd: (details) {
-          setState(() {
-            _eraserPosition = null;
-          });
-        },
-        child: Stack(
-          children: [
-            if (_backgroundImage != null)
-              Positioned.fill(
-                child: _backgroundImage!,
-              ),
-            RepaintBoundary(
-              key: _canvasKey,
-              child: CustomPaint(
-                painter: HandwritingPainter(_points,
-                    eraserPosition: _eraserPosition),
-                size: Size.infinite,
+      body: Stack(
+        children: [
+          if (_backgroundImage != null)
+            Positioned.fill(
+              child: _backgroundImage!,
+            ),
+          Positioned.fill(
+            child: GestureDetector(
+              onTapDown: (details) {
+                _handleDrawing(details.localPosition);
+              },
+              onPanStart: (details) {
+                _handleDrawing(details.localPosition);
+              },
+              onPanUpdate: (details) {
+                _handleDrawing(details.localPosition);
+              },
+              onPanEnd: (details) {
+                setState(() {
+                  _eraserPosition = null;
+                });
+              },
+              child: RepaintBoundary(
+                key: _canvasKey,
+                child: CustomPaint(
+                  painter: HandwritingPainter(_points,
+                      eraserPosition: _eraserPosition),
+                  size: Size.infinite,
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.end,
