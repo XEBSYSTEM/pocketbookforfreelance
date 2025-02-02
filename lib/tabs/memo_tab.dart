@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../screens/handwriting_memo_screen.dart';
+import '../screens/handwriting_memo_detail_screen.dart';
 import '../db/handwriting_memo_repository.dart';
 
 class MemoTab extends StatefulWidget {
@@ -69,8 +70,22 @@ class _MemoTabState extends State<MemoTab> {
                     return Card(
                       clipBehavior: Clip.antiAlias,
                       child: InkWell(
-                        onTap: () {
-                          // TODO: メモの詳細表示画面に遷移
+                        onTap: () async {
+                          final memoDetails =
+                              await _repository.getHandwritingMemo(memo['id']);
+                          if (memoDetails != null && mounted) {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    HandwritingMemoDetailScreen(
+                                  memoData: memoDetails['memo_data'],
+                                  createdAt:
+                                      DateTime.parse(memoDetails['created_at']),
+                                ),
+                              ),
+                            );
+                          }
                         },
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
