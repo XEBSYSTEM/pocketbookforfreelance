@@ -65,6 +65,7 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
   late Image? _backgroundImage;
   DrawingMode _currentMode = DrawingMode.pen;
   bool _isImageLoaded = false;
+  Offset? _eraserPosition; // 消しゴムの現在位置
 
   @override
   void initState() {
@@ -115,6 +116,10 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
   bool _isSaving = false;
 
   void _handleDrawing(Offset position) {
+    setState(() {
+      _eraserPosition = _currentMode == DrawingMode.eraser ? position : null;
+    });
+
     if (_currentMode == DrawingMode.eraser) {
       setState(() {
         // 消しゴムモードの場合、近くの点と線を削除
@@ -195,6 +200,11 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
         onPanUpdate: (details) {
           _handleDrawing(details.localPosition);
         },
+        onPanEnd: (details) {
+          setState(() {
+            _eraserPosition = null;
+          });
+        },
         child: Stack(
           children: [
             if (_backgroundImage != null)
@@ -204,7 +214,8 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
             RepaintBoundary(
               key: _canvasKey,
               child: CustomPaint(
-                painter: HandwritingPainter(_points),
+                painter: HandwritingPainter(_points,
+                    eraserPosition: _eraserPosition),
                 size: Size.infinite,
               ),
             ),
@@ -221,6 +232,7 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
                 _currentMode = _currentMode == DrawingMode.eraser
                     ? DrawingMode.pen
                     : DrawingMode.eraser;
+                _eraserPosition = null;
               });
             },
             child: Icon(
@@ -352,14 +364,25 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
 
 class HandwritingPainter extends CustomPainter {
   final List<DrawPoint> points;
+  final Offset? eraserPosition;
   // 線と点の太さを統一
   final double strokeWidth = 2.0;
   static const interpolationTimeThreshold = Duration(milliseconds: 100);
+  static const double eraseRadius = 20.0;
 
-  HandwritingPainter(this.points);
+  HandwritingPainter(this.points, {this.eraserPosition});
 
   @override
   void paint(Canvas canvas, Size size) {
+    // 消しゴムの範囲を描画
+    if (eraserPosition != null) {
+      final eraserPaint = Paint()
+        ..color = Colors.grey.withOpacity(0.5)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0;
+      canvas.drawCircle(eraserPosition!, eraseRadius, eraserPaint);
+    }
+
     if (points.isEmpty) return;
 
     final paint = Paint()
