@@ -102,13 +102,13 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
       final Uint8List memoData = byteData.buffer.asUint8List();
 
       // サムネイルの生成（元のイメージを縮小）
-      developer.log('サムネイル生成を開始します',
-          name: 'HandwritingMemoScreen._saveHandwritingMemo');
-
       final double scale = 0.2; // サムネイルのサイズを20%に
+      developer.log(
+          'サムネイル生成を開始します - 元画像サイズ: ${image.width}x${image.height}, スケール: $scale',
+          name: 'HandwritingMemoScreen._saveHandwritingMemo');
       final ui.Image thumbnailImage = await boundary.toImage(pixelRatio: scale);
       developer.log(
-          'サムネイル画像を生成しました: ${thumbnailImage.width}x${thumbnailImage.height}',
+          'サムネイル画像を生成しました - サイズ: ${thumbnailImage.width}x${thumbnailImage.height}, メモリサイズ: ${thumbnailImage.height * thumbnailImage.width * 4}bytes',
           name: 'HandwritingMemoScreen._saveHandwritingMemo');
 
       final ByteData? thumbnailByteData =
@@ -119,7 +119,8 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
       }
 
       final Uint8List thumbnailData = thumbnailByteData.buffer.asUint8List();
-      developer.log('サムネイルデータを生成しました: ${thumbnailData.length} bytes',
+      developer.log(
+          'サムネイルデータを生成しました - PNG圧縮後のサイズ: ${thumbnailData.length}bytes, 圧縮率: ${(thumbnailData.length / (thumbnailImage.height * thumbnailImage.width * 4) * 100).toStringAsFixed(2)}%',
           name: 'HandwritingMemoScreen._saveHandwritingMemo');
 
       // データベースに保存
@@ -134,8 +135,10 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
         });
       }
     } catch (e) {
-      developer.log('メモの保存中にエラーが発生しました',
-          name: 'HandwritingMemoScreen._saveHandwritingMemo', error: e);
+      developer.log('メモの保存中にエラーが発生しました: $e',
+          name: 'HandwritingMemoScreen._saveHandwritingMemo',
+          error: e,
+          stackTrace: StackTrace.current);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('保存に失敗しました: ${e.toString()}')),

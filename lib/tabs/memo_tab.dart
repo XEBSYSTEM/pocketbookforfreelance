@@ -91,9 +91,37 @@ class _MemoTabState extends State<MemoTab> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Expanded(
-                              child: Image.memory(
-                                thumbnailData,
-                                fit: BoxFit.cover,
+                              child: Builder(
+                                builder: (context) {
+                                  try {
+                                    return Image.memory(
+                                      thumbnailData,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        debugPrint(
+                                            'サムネイル表示エラー: $error\nスタックトレース: $stackTrace');
+                                        return const Center(
+                                          child: Icon(
+                                            Icons.error_outline,
+                                            color: Colors.red,
+                                            size: 40,
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  } catch (e, stackTrace) {
+                                    debugPrint(
+                                        'サムネイル表示エラー: $e\nスタックトレース: $stackTrace');
+                                    return const Center(
+                                      child: Icon(
+                                        Icons.error_outline,
+                                        color: Colors.red,
+                                        size: 40,
+                                      ),
+                                    );
+                                  }
+                                },
                               ),
                             ),
                             Padding(
