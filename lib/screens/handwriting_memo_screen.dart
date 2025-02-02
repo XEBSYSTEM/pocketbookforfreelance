@@ -219,32 +219,37 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
       appBar: AppBar(
         title: const Text('手書きメモ'),
       ),
-      body: GestureDetector(
-        onTapDown: (details) => _handleDrawing(details.localPosition),
-        onPanStart: (details) => _handleDrawing(details.localPosition),
-        onPanUpdate: (details) => _handleDrawing(details.localPosition),
-        onPanEnd: (details) {
-          setState(() {
-            _eraserPosition = null;
-          });
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return GestureDetector(
+            onTapDown: (details) => _handleDrawing(details.localPosition),
+            onPanStart: (details) => _handleDrawing(details.localPosition),
+            onPanUpdate: (details) => _handleDrawing(details.localPosition),
+            onPanEnd: (details) {
+              setState(() {
+                _eraserPosition = null;
+              });
+            },
+            child: Container(
+              width: constraints.maxWidth,
+              height: constraints.maxHeight,
+              child: RepaintBoundary(
+                key: _canvasKey,
+                child: CustomPaint(
+                  painter: HandwritingPainter(
+                    _points,
+                    eraserPosition: _eraserPosition,
+                    eraserWidth: _strokeWidth,
+                  ),
+                  size: Size(
+                    constraints.maxWidth,
+                    constraints.maxHeight,
+                  ),
+                ),
+              ),
+            ),
+          );
         },
-        child: RepaintBoundary(
-          key: _canvasKey,
-          child: CustomPaint(
-            painter: HandwritingPainter(
-              _points,
-              eraserPosition: _eraserPosition,
-              eraserWidth: _strokeWidth,
-            ),
-            size: Size(
-              MediaQuery.of(context).size.width,
-              MediaQuery.of(context).size.height -
-                  kToolbarHeight -
-                  kBottomNavigationBarHeight -
-                  MediaQuery.of(context).padding.vertical,
-            ),
-          ),
-        ),
       ),
       bottomNavigationBar: StrokeControlBar(
         availableStrokeWidths: _availableStrokeWidths,
