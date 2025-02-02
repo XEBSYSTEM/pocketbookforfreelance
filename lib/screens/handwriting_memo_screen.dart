@@ -12,32 +12,28 @@ enum DrawingMode {
   eraser,
 }
 
-class DrawStroke {
-  final List<Offset> points;
+class DrawPoint {
+  final Offset position;
   final DrawingMode mode;
 
-  DrawStroke({
-    required this.points,
+  DrawPoint({
+    required this.position,
     required this.mode,
   });
-
-  bool get isEmpty => points.isEmpty;
-  int get length => points.length;
-  Offset operator [](int index) => points[index];
 
   // JSONシリアライズ
   Map<String, dynamic> toJson() {
     return {
-      'points': points.map((p) => {'x': p.dx, 'y': p.dy}).toList(),
+      'x': position.dx,
+      'y': position.dy,
       'mode': mode.toString(),
     };
   }
 
   // JSONデシリアライズ
-  factory DrawStroke.fromJson(Map<String, dynamic> json) {
-    return DrawStroke(
-      points:
-          (json['points'] as List).map((p) => Offset(p['x'], p['y'])).toList(),
+  factory DrawPoint.fromJson(Map<String, dynamic> json) {
+    return DrawPoint(
+      position: Offset(json['x'] as double, json['y'] as double),
       mode: DrawingMode.values.firstWhere(
         (e) => e.toString() == json['mode'],
         orElse: () => DrawingMode.pen,
@@ -61,7 +57,7 @@ class HandwritingMemoScreen extends StatefulWidget {
 }
 
 class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
-  final List<DrawStroke> _strokes = [];
+  final List<DrawPoint> _points = [];
   late Image? _backgroundImage;
   DrawingMode _currentMode = DrawingMode.pen;
   bool _isImageLoaded = false;
@@ -91,10 +87,10 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
       if (widget.memoId != null) {
         final memoData = await repository.getHandwritingMemo(widget.memoId!);
         if (memoData != null && memoData['stroke_data'] != null) {
-          final strokeData = jsonDecode(memoData['stroke_data'] as String);
+          final pointData = jsonDecode(memoData['stroke_data'] as String);
           setState(() {
-            _strokes.addAll(
-              (strokeData as List).map((s) => DrawStroke.fromJson(s)),
+            _points.addAll(
+              (pointData as List).map((p) => DrawPoint.fromJson(p)),
             );
           });
         }
@@ -110,32 +106,25 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
     }
   }
 
-  List<Offset>? _currentStroke;
   final GlobalKey _canvasKey = GlobalKey();
   final HandwritingMemoRepository _repository = HandwritingMemoRepository();
   bool _isSaving = false;
 
-  // 点と線分の距離を計算するヘルパーメソッド
-  double _pointToLineDistance(Offset point, Offset lineStart, Offset lineEnd) {
-    final double normalLength = math.sqrt(
-        math.pow(lineEnd.dx - lineStart.dx, 2) +
-            math.pow(lineEnd.dy - lineStart.dy, 2));
-
-    if (normalLength == 0) return (point - lineStart).distance;
-
-    final double t = ((point.dx - lineStart.dx) * (lineEnd.dx - lineStart.dx) +
-            (point.dy - lineStart.dy) * (lineEnd.dy - lineStart.dy)) /
-        (normalLength * normalLength);
-
-    if (t < 0) return (point - lineStart).distance;
-    if (t > 1) return (point - lineEnd).distance;
-
-    final nearestPoint = Offset(
-      lineStart.dx + t * (lineEnd.dx - lineStart.dx),
-      lineStart.dy + t * (lineEnd.dy - lineStart.dy),
-    );
-
-    return (point - nearestPoint).distance;
+  void _handleDrawing(Offset position) {
+    if (_currentMode == DrawingMode.eraser) {
+      // 消しゴムモードの場合、近くの点を削除
+      const double eraseRadius = 10.0;
+      _points.removeWhere(
+          (point) => (point.position - position).distance <= eraseRadius);
+    } else {
+      // ペンモードの場合、新しい点を追加
+      setState(() {
+        _points.add(DrawPoint(
+          position: position,
+          mode: _currentMode,
+        ));
+      });
+    }
   }
 
   @override
@@ -153,62 +142,14 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
         title: const Text('手書きメモ'),
       ),
       body: GestureDetector(
+        onTapDown: (details) {
+          _handleDrawing(details.localPosition);
+        },
         onPanStart: (details) {
-          setState(() {
-            if (_currentMode == DrawingMode.eraser) {
-              // 消しゴムモードの場合は現在のストロークは追加しない
-              _currentStroke = [details.localPosition];
-            } else {
-              final points = [details.localPosition];
-              final stroke = DrawStroke(
-                points: points,
-                mode: _currentMode,
-              );
-              _currentStroke = points;
-              _strokes.add(stroke);
-            }
-          });
+          _handleDrawing(details.localPosition);
         },
         onPanUpdate: (details) {
-          if (_currentMode == DrawingMode.eraser) {
-            setState(() {
-              final currentPoint = details.localPosition;
-              final eraserRadius = 20.0;
-
-              // 過去のストロークをチェック
-              for (int i = 0; i < _strokes.length; i++) {
-                final stroke = _strokes[i];
-                if (stroke.mode == DrawingMode.eraser || stroke.isEmpty)
-                  continue;
-
-                // ストロークの各セグメントをチェック
-                for (int j = 1; j < stroke.length; j++) {
-                  final p1 = stroke[j - 1];
-                  final p2 = stroke[j];
-
-                  // 点と線分の距離を計算
-                  final distance = _pointToLineDistance(currentPoint, p1, p2);
-                  if (distance < eraserRadius) {
-                    // 交差した場合、ストロークを削除
-                    _strokes[i] = DrawStroke(points: [], mode: stroke.mode);
-                    break;
-                  }
-                }
-              }
-
-              // 消しゴムの軌跡を更新
-              _currentStroke?.add(details.localPosition);
-            });
-          } else {
-            setState(() {
-              _currentStroke?.add(details.localPosition);
-            });
-          }
-        },
-        onPanEnd: (details) {
-          setState(() {
-            _currentStroke = null;
-          });
+          _handleDrawing(details.localPosition);
         },
         child: Stack(
           children: [
@@ -219,7 +160,7 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
             RepaintBoundary(
               key: _canvasKey,
               child: CustomPaint(
-                painter: HandwritingPainter(_strokes),
+                painter: HandwritingPainter(_points),
                 size: Size.infinite,
               ),
             ),
@@ -251,7 +192,7 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
             heroTag: 'clear',
             onPressed: () {
               setState(() {
-                _strokes.clear();
+                _points.clear();
               });
             },
             child: const Icon(Icons.clear),
@@ -270,7 +211,7 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
   }
 
   Future<void> _saveHandwritingMemo() async {
-    if (_strokes.isEmpty) {
+    if (_points.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('メモを書いてください')),
       );
@@ -318,7 +259,7 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
           name: 'HandwritingMemoScreen._saveHandwritingMemo');
 
       // ストロークデータをJSONに変換
-      final strokeData = jsonEncode(_strokes.map((s) => s.toJson()).toList());
+      final strokeData = jsonEncode(_points.map((p) => p.toJson()).toList());
 
       // データベースに保存
       if (widget.memoId != null) {
@@ -366,30 +307,21 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
 }
 
 class HandwritingPainter extends CustomPainter {
-  final List<DrawStroke> strokes;
-  final double strokeWidth = 3.0;
+  final List<DrawPoint> points;
+  final double pointSize = 2.0;
 
-  HandwritingPainter(this.strokes);
+  HandwritingPainter(this.points);
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (final stroke in strokes) {
-      if (stroke.isEmpty || stroke.mode == DrawingMode.eraser) continue;
+    final paint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = pointSize * 2
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.fill;
 
-      final paint = Paint()
-        ..color = Colors.black
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round
-        ..style = PaintingStyle.stroke;
-
-      final path = Path();
-      path.moveTo(stroke[0].dx, stroke[0].dy);
-
-      for (int i = 1; i < stroke.length; i++) {
-        path.lineTo(stroke[i].dx, stroke[i].dy);
-      }
-
-      canvas.drawPath(path, paint);
+    for (final point in points) {
+      canvas.drawCircle(point.position, pointSize, paint);
     }
   }
 
