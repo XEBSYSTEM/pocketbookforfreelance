@@ -15,11 +15,13 @@ enum DrawingMode {
 class DrawPoint {
   final Offset position;
   final DrawingMode mode;
+  final DateTime timestamp;
 
   DrawPoint({
     required this.position,
     required this.mode,
-  });
+    DateTime? timestamp,
+  }) : timestamp = timestamp ?? DateTime.now();
 
   // JSONシリアライズ
   Map<String, dynamic> toJson() {
@@ -27,6 +29,7 @@ class DrawPoint {
       'x': position.dx,
       'y': position.dy,
       'mode': mode.toString(),
+      'timestamp': timestamp.millisecondsSinceEpoch,
     };
   }
 
@@ -38,6 +41,7 @@ class DrawPoint {
         (e) => e.toString() == json['mode'],
         orElse: () => DrawingMode.pen,
       ),
+      timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
     );
   }
 }
@@ -309,16 +313,38 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
 class HandwritingPainter extends CustomPainter {
   final List<DrawPoint> points;
   final double pointSize = 2.0;
+  final double strokeWidth = 2.0;
+  static const interpolationTimeThreshold = Duration(milliseconds: 100);
 
   HandwritingPainter(this.points);
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (points.isEmpty) return;
+
     final paint = Paint()
       ..color = Colors.black
-      ..strokeWidth = pointSize * 2
+      ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.fill;
+      ..style = PaintingStyle.stroke;
+
+    // 点を順番に処理
+    for (var i = 0; i < points.length - 1; i++) {
+      final current = points[i];
+      final next = points[i + 1];
+
+      // 0.1秒以内の点同士を線で結ぶ
+      if (next.timestamp.difference(current.timestamp) <=
+          interpolationTimeThreshold) {
+        // 点と点の間を線で結ぶ
+        canvas.drawLine(current.position, next.position, paint);
+      }
+    }
+
+    // 点も描画
+    paint
+      ..style = PaintingStyle.fill
+      ..strokeWidth = pointSize * 2;
 
     for (final point in points) {
       canvas.drawCircle(point.position, pointSize, paint);
