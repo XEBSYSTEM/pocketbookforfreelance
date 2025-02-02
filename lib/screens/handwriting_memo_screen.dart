@@ -143,6 +143,7 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('保存に失敗しました: ${e.toString()}')),
         );
+        print(e.toString());
       }
     } finally {
       if (mounted) {
