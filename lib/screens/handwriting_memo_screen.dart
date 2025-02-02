@@ -16,24 +16,25 @@ class DrawPoint {
   final Offset position;
   final DrawingMode mode;
   final DateTime timestamp;
+  final double strokeWidth;
 
   DrawPoint({
     required this.position,
     required this.mode,
+    required this.strokeWidth,
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();
 
-  // JSONシリアライズ
   Map<String, dynamic> toJson() {
     return {
       'x': position.dx,
       'y': position.dy,
       'mode': mode.toString(),
       'timestamp': timestamp.millisecondsSinceEpoch,
+      'strokeWidth': strokeWidth,
     };
   }
 
-  // JSONデシリアライズ
   factory DrawPoint.fromJson(Map<String, dynamic> json) {
     return DrawPoint(
       position: Offset(json['x'] as double, json['y'] as double),
@@ -41,6 +42,7 @@ class DrawPoint {
         (e) => e.toString() == json['mode'],
         orElse: () => DrawingMode.pen,
       ),
+      strokeWidth: (json['strokeWidth'] as num?)?.toDouble() ?? 2.0,
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
     );
   }
@@ -64,7 +66,10 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
   final List<DrawPoint> _points = [];
   DrawingMode _currentMode = DrawingMode.pen;
   bool _isLoading = false;
-  Offset? _eraserPosition; // 消しゴムの現在位置
+  Offset? _eraserPosition;
+  double _strokeWidth = 2.0;
+
+  final List<double> _availableStrokeWidths = [1, 2, 4, 8, 16];
 
   @override
   void initState() {
@@ -114,44 +119,38 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
 
     if (_currentMode == DrawingMode.eraser) {
       setState(() {
-        // 消しゴムモードの場合、近くの点と線を削除
-        const double eraseRadius = 20.0; // 消しゴムの範囲を拡大
+        final double eraseRadius = _strokeWidth * 5;
 
-        // 点との距離をチェック
         _points.removeWhere((point) {
           return (point.position - position).distance.toDouble() <= eraseRadius;
         });
 
-        // 線分との距離をチェック
         for (int i = _points.length - 1; i > 0; i--) {
           if (i >= _points.length) continue;
 
           final p1 = _points[i - 1].position;
           final p2 = _points[i].position;
 
-          // 線分と点との距離を計算
           final distance = _getDistanceToLineSegment(position, p1, p2);
 
-          // 線分が消しゴムの範囲内にある場合、両端の点を削除
           if (distance <= eraseRadius) {
             _points.removeAt(i);
             _points.removeAt(i - 1);
-            i--; // インデックスを調整
+            i--;
           }
         }
       });
     } else {
-      // ペンモードの場合、新しい点を追加
       setState(() {
         _points.add(DrawPoint(
           position: position,
           mode: _currentMode,
+          strokeWidth: _strokeWidth,
         ));
       });
     }
   }
 
-  // 点と線分との最短距離を計算
   double _getDistanceToLineSegment(Offset p, Offset start, Offset end) {
     final a = p - start;
     final b = end - start;
@@ -183,15 +182,9 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
         title: const Text('手書きメモ'),
       ),
       body: GestureDetector(
-        onTapDown: (details) {
-          _handleDrawing(details.localPosition);
-        },
-        onPanStart: (details) {
-          _handleDrawing(details.localPosition);
-        },
-        onPanUpdate: (details) {
-          _handleDrawing(details.localPosition);
-        },
+        onTapDown: (details) => _handleDrawing(details.localPosition),
+        onPanStart: (details) => _handleDrawing(details.localPosition),
+        onPanUpdate: (details) => _handleDrawing(details.localPosition),
         onPanEnd: (details) {
           setState(() {
             _eraserPosition = null;
@@ -200,10 +193,52 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
         child: RepaintBoundary(
           key: _canvasKey,
           child: CustomPaint(
-            painter:
-                HandwritingPainter(_points, eraserPosition: _eraserPosition),
+            painter: HandwritingPainter(
+              _points,
+              eraserPosition: _eraserPosition,
+              eraserWidth: _strokeWidth,
+            ),
             size: Size.infinite,
           ),
+        ),
+      ),
+      bottomNavigationBar: BottomAppBar(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            ..._availableStrokeWidths.map((width) {
+              return IconButton(
+                onPressed: () {
+                  setState(() {
+                    _strokeWidth = width;
+                  });
+                },
+                icon: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: _strokeWidth == width ? Colors.blue : Colors.grey,
+                      width: 2,
+                    ),
+                  ),
+                  child: Center(
+                    child: Container(
+                      width: width,
+                      height: width,
+                      decoration: BoxDecoration(
+                        color: _currentMode == DrawingMode.pen
+                            ? Colors.black
+                            : Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ],
         ),
       ),
       floatingActionButton: Row(
@@ -263,7 +298,6 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
     });
 
     try {
-      // キャンバスをイメージに変換
       final RenderRepaintBoundary boundary = _canvasKey.currentContext!
           .findRenderObject() as RenderRepaintBoundary;
       final ui.Image image = await boundary.toImage();
@@ -276,16 +310,8 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
 
       final Uint8List memoData = byteData.buffer.asUint8List();
 
-      // サムネイルの生成（元のイメージを縮小）
-      final double scale = 0.2; // サムネイルのサイズを20%に
-      developer.log(
-          'サムネイル生成を開始します - 元画像サイズ: ${image.width}x${image.height}, スケール: $scale',
-          name: 'HandwritingMemoScreen._saveHandwritingMemo');
+      final double scale = 0.2;
       final ui.Image thumbnailImage = await boundary.toImage(pixelRatio: scale);
-      developer.log(
-          'サムネイル画像を生成しました - サイズ: ${thumbnailImage.width}x${thumbnailImage.height}, メモリサイズ: ${thumbnailImage.height * thumbnailImage.width * 4}bytes',
-          name: 'HandwritingMemoScreen._saveHandwritingMemo');
-
       final ByteData? thumbnailByteData =
           await thumbnailImage.toByteData(format: ui.ImageByteFormat.png);
 
@@ -294,16 +320,9 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
       }
 
       final Uint8List thumbnailData = thumbnailByteData.buffer.asUint8List();
-      developer.log(
-          'サムネイルデータを生成しました - PNG圧縮後のサイズ: ${thumbnailData.length}bytes, 圧縮率: ${(thumbnailData.length / (thumbnailImage.height * thumbnailImage.width * 4) * 100).toStringAsFixed(2)}%',
-          name: 'HandwritingMemoScreen._saveHandwritingMemo');
-
-      // ストロークデータをJSONに変換
       final strokeData = jsonEncode(_points.map((p) => p.toJson()).toList());
 
-      // データベースに保存
       if (widget.memoId != null) {
-        // 既存メモの更新
         await _repository.updateHandwritingMemo(
           widget.memoId!,
           memoData,
@@ -311,7 +330,6 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
           strokeData,
         );
       } else {
-        // 新規メモの保存
         await _repository.insertHandwritingMemo(
           memoData,
           thumbnailData,
@@ -334,7 +352,6 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('保存に失敗しました: ${e.toString()}')),
         );
-        print(e.toString());
       }
     } finally {
       if (mounted) {
@@ -349,17 +366,19 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
 class HandwritingPainter extends CustomPainter {
   final List<DrawPoint> points;
   final Offset? eraserPosition;
-  // 線と点の太さを統一
-  final double strokeWidth = 2.0;
+  final double eraserWidth;
   static const interpolationTimeThreshold = Duration(milliseconds: 100);
-  static const double eraseRadius = 20.0;
 
-  HandwritingPainter(this.points, {this.eraserPosition});
+  HandwritingPainter(
+    this.points, {
+    this.eraserPosition,
+    this.eraserWidth = 2.0,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 消しゴムの範囲を描画
     if (eraserPosition != null) {
+      final eraseRadius = eraserWidth * 5.0;
       final eraserPaint = Paint()
         ..color = Colors.grey.withOpacity(0.5)
         ..style = PaintingStyle.stroke
@@ -369,32 +388,28 @@ class HandwritingPainter extends CustomPainter {
 
     if (points.isEmpty) return;
 
-    final paint = Paint()
-      ..color = Colors.black
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    // 点を順番に処理
     for (var i = 0; i < points.length - 1; i++) {
       final current = points[i];
       final next = points[i + 1];
 
-      // 0.1秒以内の点同士を線で結ぶ
       if (next.timestamp.difference(current.timestamp) <=
           interpolationTimeThreshold) {
-        // 点と点の間を線で結ぶ
+        final paint = Paint()
+          ..color = Colors.black
+          ..strokeWidth = current.strokeWidth
+          ..strokeCap = StrokeCap.round
+          ..style = PaintingStyle.stroke;
+
         canvas.drawLine(current.position, next.position, paint);
       }
     }
 
-    // 点も描画（線と同じ太さ）
-    paint
-      ..style = PaintingStyle.fill
-      ..strokeWidth = strokeWidth;
-
     for (final point in points) {
-      canvas.drawCircle(point.position, strokeWidth / 2, paint);
+      final paint = Paint()
+        ..color = Colors.black
+        ..style = PaintingStyle.fill;
+
+      canvas.drawCircle(point.position, point.strokeWidth / 2, paint);
     }
   }
 
