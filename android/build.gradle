@@ -29,11 +29,3 @@ subprojects {
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
-
-allprojects {
-    tasks.withType(JavaCompile).configureEach {
-        javaCompiler = javaToolchains.compilerFor {
-            languageVersion = JavaLanguageVersion.of(17)
-        }
-    }
-}
