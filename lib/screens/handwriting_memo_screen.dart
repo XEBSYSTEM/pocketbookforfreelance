@@ -116,10 +116,33 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
 
   void _handleDrawing(Offset position) {
     if (_currentMode == DrawingMode.eraser) {
-      // 消しゴムモードの場合、近くの点を削除
-      const double eraseRadius = 10.0;
-      _points.removeWhere(
-          (point) => (point.position - position).distance <= eraseRadius);
+      setState(() {
+        // 消しゴムモードの場合、近くの点と線を削除
+        const double eraseRadius = 20.0; // 消しゴムの範囲を拡大
+
+        // 点との距離をチェック
+        _points.removeWhere((point) {
+          return (point.position - position).distance.toDouble() <= eraseRadius;
+        });
+
+        // 線分との距離をチェック
+        for (int i = _points.length - 1; i > 0; i--) {
+          if (i >= _points.length) continue;
+
+          final p1 = _points[i - 1].position;
+          final p2 = _points[i].position;
+
+          // 線分と点との距離を計算
+          final distance = _getDistanceToLineSegment(position, p1, p2);
+
+          // 線分が消しゴムの範囲内にある場合、両端の点を削除
+          if (distance <= eraseRadius) {
+            _points.removeAt(i);
+            _points.removeAt(i - 1);
+            i--; // インデックスを調整
+          }
+        }
+      });
     } else {
       // ペンモードの場合、新しい点を追加
       setState(() {
@@ -129,6 +152,23 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
         ));
       });
     }
+  }
+
+  // 点と線分との最短距離を計算
+  double _getDistanceToLineSegment(Offset p, Offset start, Offset end) {
+    final a = p - start;
+    final b = end - start;
+    final bLen = b.distance.toDouble();
+
+    if (bLen == 0) return a.distance.toDouble();
+
+    final t = math.max(
+        0.0,
+        math.min(
+            1.0, ((a.dx * b.dx + a.dy * b.dy) / (bLen * bLen)).toDouble()));
+    final projection = start + (b * t);
+
+    return (p - projection).distance.toDouble();
   }
 
   @override
@@ -312,7 +352,7 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
 
 class HandwritingPainter extends CustomPainter {
   final List<DrawPoint> points;
-  final double pointSize = 2.0;
+  // 線と点の太さを統一
   final double strokeWidth = 2.0;
   static const interpolationTimeThreshold = Duration(milliseconds: 100);
 
@@ -341,13 +381,13 @@ class HandwritingPainter extends CustomPainter {
       }
     }
 
-    // 点も描画
+    // 点も描画（線と同じ太さ）
     paint
       ..style = PaintingStyle.fill
-      ..strokeWidth = pointSize * 2;
+      ..strokeWidth = strokeWidth;
 
     for (final point in points) {
-      canvas.drawCircle(point.position, pointSize, paint);
+      canvas.drawCircle(point.position, strokeWidth / 2, paint);
     }
   }
 
