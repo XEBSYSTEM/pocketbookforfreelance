@@ -6,7 +6,14 @@ import '../db/handwriting_memo_repository.dart';
 import 'dart:developer' as developer;
 
 class HandwritingMemoScreen extends StatefulWidget {
-  const HandwritingMemoScreen({super.key});
+  final Uint8List? initialMemoData;
+  final int? memoId;
+
+  const HandwritingMemoScreen({
+    super.key,
+    this.initialMemoData,
+    this.memoId,
+  });
 
   @override
   State<HandwritingMemoScreen> createState() => _HandwritingMemoScreenState();
@@ -14,6 +21,18 @@ class HandwritingMemoScreen extends StatefulWidget {
 
 class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
   final List<List<Offset>> _strokes = [];
+  late Image? _backgroundImage;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialMemoData != null) {
+      _backgroundImage = Image.memory(widget.initialMemoData!);
+    } else {
+      _backgroundImage = null;
+    }
+  }
+
   List<Offset>? _currentStroke;
   final GlobalKey _canvasKey = GlobalKey();
   final HandwritingMemoRepository _repository = HandwritingMemoRepository();
@@ -42,12 +61,20 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
             _currentStroke = null;
           });
         },
-        child: RepaintBoundary(
-          key: _canvasKey,
-          child: CustomPaint(
-            painter: HandwritingPainter(_strokes),
-            size: Size.infinite,
-          ),
+        child: Stack(
+          children: [
+            if (_backgroundImage != null)
+              Positioned.fill(
+                child: _backgroundImage!,
+              ),
+            RepaintBoundary(
+              key: _canvasKey,
+              child: CustomPaint(
+                painter: HandwritingPainter(_strokes),
+                size: Size.infinite,
+              ),
+            ),
+          ],
         ),
       ),
       floatingActionButton: Row(
@@ -124,15 +151,23 @@ class _HandwritingMemoScreenState extends State<HandwritingMemoScreen> {
           name: 'HandwritingMemoScreen._saveHandwritingMemo');
 
       // データベースに保存
-      await _repository.insertHandwritingMemo(memoData, thumbnailData);
+      if (widget.memoId != null) {
+        // 既存メモの更新
+        await _repository.updateHandwritingMemo(
+          widget.memoId!,
+          memoData,
+          thumbnailData,
+        );
+      } else {
+        // 新規メモの保存
+        await _repository.insertHandwritingMemo(memoData, thumbnailData);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('メモを保存しました')),
         );
-        setState(() {
-          _strokes.clear();
-        });
+        Navigator.of(context).pop(true);
       }
     } catch (e) {
       developer.log('メモの保存中にエラーが発生しました: $e',

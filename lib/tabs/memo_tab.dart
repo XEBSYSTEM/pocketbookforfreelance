@@ -82,6 +82,7 @@ class _MemoTabState extends State<MemoTab> {
                                   memoData: memoDetails['memo_data'],
                                   createdAt:
                                       DateTime.parse(memoDetails['created_at']),
+                                  memoId: memo['id'],
                                 ),
                               ),
                             );
