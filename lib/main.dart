@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'tabs/company_list_tab.dart';
@@ -9,11 +10,21 @@ void main() async {
   // Flutter初期化
   WidgetsFlutterBinding.ensureInitialized();
 
-  // WindowsでSQLiteを使用するための初期化
-  sqfliteFfiInit();
-  databaseFactory = databaseFactoryFfi;
+  // プラットフォーム固有のSQLite初期化
+  if (Platform.isAndroid) {
+    // Androidの場合、システムのSQLiteを使用
+    databaseFactory = databaseFactoryFfi;
+  } else if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+    // デスクトッププラットフォームの場合
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  } else {
+    // その他のプラットフォーム（Windows, macOS）
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
 
-  // データベースの初期化とパスの確認
+  // データベースの初期化
   final dbHelper = DatabaseHelper.instance;
   await dbHelper.database;
 

@@ -36,10 +36,6 @@ class DatabaseHelper {
 
     final path = join(dbPath, filePath);
 
-    // SQLite FFIの初期化
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-
     return await openDatabase(
       path,
       version: 7,
