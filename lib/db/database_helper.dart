@@ -1,6 +1,7 @@
 import 'dart:io';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import '../company_detail.dart' show CompanyType;
 import 'company_repository.dart';
 import 'schedule_repository.dart';
@@ -23,27 +24,21 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    print('Current Directory: ${Directory.current.path}');
-    print('Database Directory: $dbPath');
-    print('Database File: $filePath');
+    // アプリのドキュメントディレクトリを取得
+    final appDocDir = await getApplicationDocumentsDirectory();
+    final dbPath = join(appDocDir.path, 'databases');
 
-    final path = join(dbPath, filePath);
-    print('Full Database Path: $path');
-
-    // ファイルの存在確認とログ出力
-    final file = File(path);
-    if (file.existsSync()) {
-      print('Database file exists at: $path');
-    }
-
-    // ディレクトリが存在することを確認
+    // データベースディレクトリが存在しない場合は作成
     final dir = Directory(dbPath);
-    print('Directory exists: ${dir.existsSync()}');
     if (!dir.existsSync()) {
-      print('Creating directory: $dbPath');
       dir.createSync(recursive: true);
     }
+
+    final path = join(dbPath, filePath);
+
+    // SQLite FFIの初期化
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
 
     return await openDatabase(
       path,
