@@ -11,15 +11,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // プラットフォーム固有のSQLite初期化
-  if (Platform.isAndroid) {
-    // Androidの場合、システムのSQLiteを使用
-    databaseFactory = databaseFactoryFfi;
-  } else if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
-    // デスクトッププラットフォームの場合
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  } else {
-    // その他のプラットフォーム（Windows, macOS）
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    // デスクトッププラットフォームの場合はFFIを使用
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }

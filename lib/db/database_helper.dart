@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import '../company_detail.dart' show CompanyType;
@@ -24,17 +24,15 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDB(String filePath) async {
-    // アプリのドキュメントディレクトリを取得
-    final appDocDir = await getApplicationDocumentsDirectory();
-    final dbPath = join(appDocDir.path, 'databases');
+    // データベースのパスを取得
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, filePath);
 
-    // データベースディレクトリが存在しない場合は作成
-    final dir = Directory(dbPath);
+    // ディレクトリが存在することを確認
+    final dir = Directory(dirname(path));
     if (!dir.existsSync()) {
       dir.createSync(recursive: true);
     }
-
-    final path = join(dbPath, filePath);
 
     return await openDatabase(
       path,
