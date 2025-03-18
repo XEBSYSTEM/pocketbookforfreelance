@@ -4,6 +4,8 @@
 
 Androidビルド用の設定ファイル以外AIエージェントで作成
 
+iPhoneビルドは未設定
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
