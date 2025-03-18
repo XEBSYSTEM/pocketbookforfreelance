@@ -1,6 +1,7 @@
 # pocketbookforfreelance
 
 フリーランス用手帳アプリ
+Androidビルド用の設定ファイル以外AIエージェントで作成
 
 ## Getting Started
 
